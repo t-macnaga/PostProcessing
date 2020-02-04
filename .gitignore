@@ -1,0 +1,12 @@
+.vs/
+.vscode
+
+Library
+Temp
+*.sln
+*.userprefs
+*.csproj
+*.unityproj
+ProjectSettings/UnityAnalyticsManager.asset
+obj
+*.apk
