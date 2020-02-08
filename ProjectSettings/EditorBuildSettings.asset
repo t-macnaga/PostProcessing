@@ -6,6 +6,6 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/Scenes/MyBloom.unity
+    path: Assets/Scenes/SampleScene.unity
     guid: fe5cf86248363784798013a31a2e7615
   m_configObjects: {}

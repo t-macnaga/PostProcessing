@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 86f8400efce636f4e9cb5bd6870196db, type: 3}
+  m_Name: New Bloom
+  m_EditorClassIdentifier: 
+  _iteration: 8
+  _threshold: 1
+  _softThreshold: 0.47
+  _intensity: 0.79
+  _debug: 0

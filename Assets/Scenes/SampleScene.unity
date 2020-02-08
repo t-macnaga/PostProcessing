@@ -691,15 +691,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b207da477178f7f4bb1426cd64628e5e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  bloom: 1
-  _iteration: 7
-  _threshold: 0.746
-  _softThreshold: 0.308
-  _intensity: 0.38
-  _debug: 0
-  bloomMaterial: {fileID: 2100000, guid: 6bfbc4e4e0b8d7d40bfd1675cd4f4fef, type: 2}
-  dof: 1
-  material: {fileID: 2100000, guid: ca5e4fd20be4f0f41a41bfdb428ebc29, type: 2}
+  uberMaterial: {fileID: 2100000, guid: fa0f4c2347e7e134e8d6b5e03dcf47ca, type: 2}
+  profile: {fileID: 11400000, guid: 94d40c64b25e7dd42a86c2197feeabf6, type: 2}
+  mobileModeGaussianBlur: 1
+  gaussianBlur: 1
+  gaussianBlurMaterial: {fileID: 2100000, guid: 1bfae973c714c8b489ddd6f7a93b9a69,
+    type: 2}
 --- !u!1 &1846245608
 GameObject:
   m_ObjectHideFlags: 0
@@ -878,7 +875,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1870983240}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 1.728, y: 1.369, z: 0}
+  m_LocalPosition: {x: 1.44, y: 1.369, z: 0}
   m_LocalScale: {x: 2.5731, y: 2.5731, z: 2.5731}
   m_Children: []
   m_Father: {fileID: 0}
@@ -970,7 +967,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1933823766}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -1.907, y: 0, z: 0}
+  m_LocalPosition: {x: -1.61, y: 0, z: 0.06}
   m_LocalScale: {x: 1.7589, y: 1.7589, z: 1.7589}
   m_Children: []
   m_Father: {fileID: 0}
