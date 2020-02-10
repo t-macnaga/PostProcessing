@@ -4,9 +4,8 @@ using UnityEngine;
 using UnityEngine.Rendering;
 
 [CreateAssetMenu()]
-public class Bloom : ScriptableObject, IPostProcessComponent
+public class Bloom : PostProcessEffect, IPostProcessComponent
 {
-    // [SerializeField] bool bloom;
     [SerializeField, Range(1, 30)] int _iteration = 1;
     [SerializeField, Range(0.0f, 1.0f)] float _threshold = 0.0f;
     [SerializeField, Range(0.0f, 1.0f)] float _softThreshold = 0.0f;
@@ -17,27 +16,12 @@ public class Bloom : ScriptableObject, IPostProcessComponent
     RenderTargetIdentifier[] ids = new RenderTargetIdentifier[30];
     RenderTextureDescriptor[] descs = new RenderTextureDescriptor[30];
 
-    // CommandBuffer cmd;
     RenderTextureDescriptor sourceDesc = new RenderTextureDescriptor();
     int sourceId = Shader.PropertyToID("Source");
 
-    // RenderTargetIdentifier srcId = new RenderTargetIdentifier(BuiltinRenderTextureType.CameraTarget);
     RenderTargetIdentifier destId = new RenderTargetIdentifier(BuiltinRenderTextureType.CameraTarget);
-    // Camera camera;
-    // RenderTargetIdentifier srcId = new RenderTargetIdentifier(BuiltinRenderTextureType.CameraTarget);
-    // RenderTargetIdentifier destId = new RenderTargetIdentifier(BuiltinRenderTextureType.CameraTarget);
-    // int rt1Id = Shader.PropertyToID("_rt1");
-    // int rt2Id = Shader.PropertyToID("_rt2");
 
-    // void Awake()
-    // {
-    //     camera = GetComponent<Camera>();
-    //     camera.depthTextureMode |= DepthTextureMode.Depth;
-    //     _Direction = Shader.PropertyToID("_Direction");
-    //     _BlurTex = Shader.PropertyToID("_BlurTex");
-    // }
-
-    public void Render(PostProcessContext context)
+    public override void Render(PostProcessContext context)
     {
         var cmd = context.CommandBuffer;
         sourceDesc.width = Screen.width;

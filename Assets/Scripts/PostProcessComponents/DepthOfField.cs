@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.Rendering;
 
 [CreateAssetMenu()]
-public class DepthOfField : ScriptableObject, IPostProcessComponent
+public class DepthOfField : PostProcessEffect, IPostProcessComponent
 {
     [SerializeField] float depth;
     [SerializeField] float radious;
@@ -12,8 +12,8 @@ public class DepthOfField : ScriptableObject, IPostProcessComponent
     static readonly int DofShaderPass = 6;
 
     int _MainTex;
-    int _Direction;// = Shader.PropertyToID("_Direction");
-    int _BlurTex;// = Shader.PropertyToID("_BlurTex");
+    int _Direction;
+    int _BlurTex;
     int _Depth = Shader.PropertyToID("_Depth");
     int _Radius = Shader.PropertyToID("_Radius");
     int rt1Id = Shader.PropertyToID("_rt1");
@@ -27,11 +27,9 @@ public class DepthOfField : ScriptableObject, IPostProcessComponent
         _BlurTex = Shader.PropertyToID("_BlurTex");
         _Direction = Shader.PropertyToID("_Direction");
         _MainTex = Shader.PropertyToID("_MainTex");
-        // int _Depth = Shader.PropertyToID("_Depth");
-        // int _Radius = Shader.PropertyToID("_Radius");
     }
 
-    public void Render(PostProcessContext context)
+    public override void Render(PostProcessContext context)
     {
         context.UberMaterial.SetFloat(_Depth, depth);
         context.UberMaterial.SetFloat(_Radius, radious);

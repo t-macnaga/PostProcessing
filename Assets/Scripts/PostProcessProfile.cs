@@ -1,24 +1,30 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Rendering;
 
 [CreateAssetMenu()]
 public class PostProcessProfile : ScriptableObject
 {
-    public Bloom bloom;
-    public DepthOfField dof;
+    public List<PostProcessEffect> components;
+
+    public void Add(PostProcessEffect component)
+    {
+        components.Add(component);
+    }
+
+    public void Remove(PostProcessEffect component)
+    {
+        components.Remove(component);
+    }
 
     public void Render(PostProcessContext context)
     {
-        if (bloom != null)
+        foreach (var component in components)
         {
-            bloom.Render(context);
-        }
-
-        if (dof != null)
-        {
-            dof.Render(context);
+            if (component.IsEnabled)
+            {
+                component.Render(context);
+            }
         }
     }
 }

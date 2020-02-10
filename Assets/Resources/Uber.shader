@@ -42,7 +42,8 @@
         }
 
         half getBrightness(half3 color){
-            return max(color.r, max(color.g, color.b));
+            return Luminance(color);
+            // return max(color.r, max(color.g, color.b));
         }
 
         v2f vert (appdata v)
@@ -71,7 +72,8 @@
             {
                 // 色抽出にソフトニーを適用
                 half4 col = 1;
-                col.rgb = sampleBox(i.uv, 1.0);
+                // col.rgb = sampleBox(i.uv, 1.0);
+                col = tex2D(_MainTex, i.uv);
                 half brightness = getBrightness(col.rgb);
 
                 half soft = brightness - _FilterParams.y;
@@ -110,7 +112,7 @@
             fixed4 frag (v2f i) : SV_Target
             {
                 half4 col = 1;
-                col.rgb = sampleBox(i.uv, 0.5);
+                col.rgb = sampleBox(i.uv, 1);
                 return col;
             }
 

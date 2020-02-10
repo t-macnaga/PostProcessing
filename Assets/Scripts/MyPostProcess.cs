@@ -1,5 +1,8 @@
 ﻿using UnityEngine;
 using UnityEngine.Rendering;
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 
 public class PostProcessContext
 {
@@ -15,7 +18,15 @@ public class PostProcessContext
 
 public interface IPostProcessComponent
 {
+    bool IsEnabled { get; set; }
     void Render(PostProcessContext context);
+}
+
+public abstract class PostProcessEffect : ScriptableObject, IPostProcessComponent
+{
+    [SerializeField] protected bool isEnabled;
+    public virtual bool IsEnabled { get => isEnabled; set => isEnabled = value; }
+    public abstract void Render(PostProcessContext context);
 }
 
 [ExecuteAlways]
@@ -23,14 +34,6 @@ public class MyPostProcess : MonoBehaviour
 {
     public Material uberMaterial;
     public PostProcessProfile profile;
-
-    // #region DOF
-    // public bool dof;
-    // public Material material;
-
-    // private int _Direction;
-    // private int _BlurTex;
-    // #endregion
 
     #region GaussianBlur
     public bool mobileModeGaussianBlur;
