@@ -1,39 +1,14 @@
 ﻿using UnityEngine;
 using UnityEngine.Rendering;
-#if UNITY_EDITOR
-using UnityEditor;
-#endif
-
-public class PostProcessContext
-{
-    public CommandBuffer CommandBuffer { get; private set; }
-    public Material UberMaterial { get; private set; }
-
-    public PostProcessContext(CommandBuffer commandBuffer, Material uberMaterial)
-    {
-        CommandBuffer = commandBuffer;
-        UberMaterial = uberMaterial;
-    }
-}
-
-public interface IPostProcessComponent
-{
-    bool IsEnabled { get; set; }
-    void Render(PostProcessContext context);
-}
-
-public abstract class PostProcessEffect : ScriptableObject, IPostProcessComponent
-{
-    [SerializeField] protected bool isEnabled;
-    public virtual bool IsEnabled { get => isEnabled; set => isEnabled = value; }
-    public abstract void Render(PostProcessContext context);
-}
 
 [ExecuteAlways]
 public class MyPostProcess : MonoBehaviour
 {
     public Material uberMaterial;
     public PostProcessProfile profile;
+    public bool useOnRenderImage;
+    public float renderScale = 1f;
+    public UnityEngine.UI.RawImage image;
 
     #region GaussianBlur
     public bool mobileModeGaussianBlur;
@@ -45,6 +20,12 @@ public class MyPostProcess : MonoBehaviour
     // RenderTextureDescriptor[] descs = new RenderTextureDescriptor[30];
     PostProcessContext Context;
     CommandBuffer cmd;
+    RenderTexture renderTexture;
+
+    //TODO: for specific layer mask
+    // Camera layerCamera;
+    // RenderTexture layerCameraTarget;
+
     // RenderTextureDescriptor sourceDesc = new RenderTextureDescriptor();
     // int sourceId = Shader.PropertyToID("Source");
 
@@ -58,20 +39,74 @@ public class MyPostProcess : MonoBehaviour
     {
         camera = GetComponent<Camera>();
         camera.depthTextureMode |= DepthTextureMode.Depth;
-        // _Direction = Shader.PropertyToID("_Direction");
-        // _BlurTex = Shader.PropertyToID("_BlurTex");
     }
 
     void OnEnable()
     {
+        // renderTexture = RenderTexture.GetTemporary(
+        //                 new RenderTextureDescriptor((int)(Screen.width * renderScale), (int)(Screen.height * renderScale)));
+        // camera.targetTexture = renderTexture;
+        // image.texture = renderTexture;
+
         cmd = new CommandBuffer();
         Context = new PostProcessContext(cmd, uberMaterial);
         camera.AddCommandBuffer(CameraEvent.BeforeImageEffects, cmd);
+
+        //TODO: make specific layer camera test.
+        // MakeCamera();
     }
 
     void OnDisable()
     {
         camera.RemoveCommandBuffer(CameraEvent.BeforeImageEffects, cmd);
+
+        //TODO:
+        // RenderTexture.ReleaseTemporary(layerCameraTarget);
+        // DestroyImmediate(layerCamera.gameObject);
+        // camera.targetTexture = null;
+        // RenderTexture.ReleaseTemporary(renderTexture);
+    }
+
+    void OnRenderImage(RenderTexture source, RenderTexture dest)
+    {
+        if (useOnRenderImage)
+        {
+            if (profile != null)
+            {
+                Context.useOnRenderImage = useOnRenderImage;
+                if (profile.EnabledAny())
+                {
+                    var temp = RenderTexture.GetTemporary(
+                        new RenderTextureDescriptor((int)(Screen.width * renderScale), (int)(Screen.height * renderScale)));
+                    Graphics.Blit(source, temp);
+                    Context.Source = source;
+                    Context.Dest = temp;
+                    profile.Render(Context);
+
+                    //TODO: experiment
+                    // Context.UberMaterial.SetTexture("_MainTex",);
+                    // temp => temp2
+                    // Source + temp2 => dest
+
+                    Graphics.Blit(Context.Source, dest, Context.UberMaterial, 8);
+                    // Graphics.Blit(temp, dest, Context.UberMaterial, 8);
+                    // Graphics.Blit(source, dest);
+
+                    RenderTexture.ReleaseTemporary(temp);
+
+                    //TODO: experiment
+                    // RenderTexture.ReleaseTemporary(Context.QuaterTex);
+                }
+                else
+                {
+                    Graphics.Blit(source, dest);
+                }
+            }
+        }
+        else
+        {
+            Graphics.Blit(source, dest);
+        }
     }
 
     void OnPreRender()
@@ -82,6 +117,7 @@ public class MyPostProcess : MonoBehaviour
     void BuildCommandBuffer()
     {
         cmd.Clear();
+        if (useOnRenderImage) { return; }
 
         if (profile != null)
         {
@@ -93,37 +129,6 @@ public class MyPostProcess : MonoBehaviour
         //     SetupGaussianBlur();
         // }
     }
-
-    // void SetupDOF()
-    // {
-    //     var desc = new RenderTextureDescriptor(Screen.width / 2, Screen.height / 2);
-    //     cmd.GetTemporaryRT(rt1Id, desc, FilterMode.Bilinear);
-    //     cmd.GetTemporaryRT(rt2Id, desc, FilterMode.Bilinear);
-
-    //     var h = new Vector2(1, 0);
-    //     var v = new Vector2(0, 1);
-
-    //     // Scale Down
-    //     cmd.Blit(srcId, rt1Id);
-
-    //     // 0: Gaussian Blur
-    //     for (int i = 0; i < 3; i++)
-    //     {
-    //         // material.SetVector(_Direction, h);
-    //         cmd.SetGlobalVector(_Direction, h);
-    //         cmd.Blit(rt1Id, rt2Id, material, 0);
-    //         cmd.SetGlobalVector(_Direction, v);
-    //         // material.SetVector(_Direction, v);
-    //         cmd.Blit(rt2Id, rt1Id, material, 0);
-    //     }
-
-    //     // 1: DOF
-    //     cmd.SetGlobalTexture(_BlurTex, rt1Id);
-    //     cmd.Blit(srcId, destId, material, 1);
-
-    //     cmd.ReleaseTemporaryRT(rt2Id);
-    //     cmd.ReleaseTemporaryRT(rt1Id);
-    // }
 
     // void SetupGaussianBlur()
     // {
@@ -166,5 +171,61 @@ public class MyPostProcess : MonoBehaviour
 
     //     cmd.ReleaseTemporaryRT(rt2Id);
     //     cmd.ReleaseTemporaryRT(rt1Id);
+    // }
+
+    // void MakeCamera()
+    // {
+    //     var go = new GameObject("_Camera");
+    //     layerCamera = go.AddComponent<Camera>();
+    //     layerCamera.CopyFrom(camera);
+    //     go.hideFlags = HideFlags.DontSave;
+    //     layerCamera.cullingMask = 0;
+    //     layerCamera.cullingMask |= (1 << LayerMask.NameToLayer("postprocess"));
+    //     layerCamera.clearFlags = CameraClearFlags.Depth;
+    //     layerCameraTarget = RenderTexture.GetTemporary(camera.pixelWidth / 2, camera.pixelHeight / 2);
+    //     layerCamera.targetTexture = layerCameraTarget;
+    //     go.AddComponent<LayerCamera>().Setup(this);
+    // }
+
+    // class LayerCamera : MonoBehaviour
+    // {
+    //     MyPostProcess postProcess;
+
+    //     public void Setup(MyPostProcess postProcess)
+    //     {
+    //         this.postProcess = postProcess;
+    //     }
+
+    //     void OnRenderImage(RenderTexture source, RenderTexture dest)
+    //     {
+
+    //         if (postProcess.useOnRenderImage)
+    //         {
+    //             if (postProcess.profile != null)
+    //             {
+    //                 postProcess.Context.useOnRenderImage = postProcess.useOnRenderImage;
+    //                 if (postProcess.profile.EnabledAny())
+    //                 {
+    //                     var temp = RenderTexture.GetTemporary(new RenderTextureDescriptor(Screen.width, Screen.height));
+    //                     Graphics.Blit(source, temp);
+    //                     postProcess.Context.Source = source;
+    //                     postProcess.Context.Dest = temp;
+    //                     postProcess.profile.Render(postProcess.Context);
+    //                     Graphics.Blit(postProcess.Context.Source, dest, postProcess.Context.UberMaterial, 8);
+    //                     RenderTexture.ReleaseTemporary(temp);
+    //                 }
+    //                 else
+    //                 {
+    //                     Graphics.Blit(source, dest);
+    //                 }
+    //             }
+    //         }
+    //         else
+    //         {
+    //             //TODO: 白く表示されちゃう。
+    //             Graphics.Blit(source, dest);
+    //             // BuildCommandBuffer();
+    //         }
+    //     }
     // }
 }

@@ -6,7 +6,7 @@ using UnityEngine.Rendering;
 [CreateAssetMenu()]
 public class Bloom : PostProcessEffect, IPostProcessComponent
 {
-    [SerializeField, Range(1, 30)] int _iteration = 1;
+    [SerializeField, Range(1, 30)] public int _iteration = 1;
     [SerializeField, Range(0.0f, 1.0f)] float _threshold = 0.0f;
     [SerializeField, Range(0.0f, 1.0f)] float _softThreshold = 0.0f;
     [SerializeField, Range(0.0f, 10.0f)] float _intensity = 1.0f;
@@ -14,31 +14,36 @@ public class Bloom : PostProcessEffect, IPostProcessComponent
     // 4点をサンプリングして色を作るマテリアル
 
     RenderTargetIdentifier[] ids = new RenderTargetIdentifier[30];
+    RenderTexture[] textures = new RenderTexture[30];
     RenderTextureDescriptor[] descs = new RenderTextureDescriptor[30];
 
     RenderTextureDescriptor sourceDesc = new RenderTextureDescriptor();
     int sourceId = Shader.PropertyToID("Source");
+    int halfId = Shader.PropertyToID("_HalfTex");
 
-    RenderTargetIdentifier destId = new RenderTargetIdentifier(BuiltinRenderTextureType.CameraTarget);
+    // RenderTargetIdentifier destId = new RenderTargetIdentifier(BuiltinRenderTextureType.CameraTarget);
+    // public static void BlitFullscreenTriangle(this CommandBuffer cmd, RenderTargetIdentifier source, RenderTargetIdentifier destination, bool clear = false, Rect? viewport = null)
+    // {
+    //     cmd.SetGlobalTexture("_MainTex", source);
+    //     // cmd.SetRenderTargetWithLoadStoreAction(destination, viewport == null ? LoadAction.DontCare : LoadAction.Load, StoreAction.Store);
+    //     cmd.SetRenderTarget(destination);
 
-    public override void Render(PostProcessContext context)
+    //     if (viewport != null)
+    //         cmd.SetViewport(viewport.Value);
+
+    //     if (clear)
+    //         cmd.ClearRenderTarget(true, true, Color.clear);
+
+    //     cmd.Blit(source,destination);
+    //     // cmd.DrawMesh(fullscreenTriangle, Matrix4x4.identity, copyMaterial, 0, 0);
+    // }
+
+    void RenderForOnRenderImage(PostProcessContext context)
     {
-        var cmd = context.CommandBuffer;
-        sourceDesc.width = Screen.width;
-        sourceDesc.height = Screen.height;
-        sourceDesc.msaaSamples = 1;
-        sourceDesc.colorFormat = RenderTextureFormat.Default;
-        sourceDesc.useMipMap = false;
-        sourceDesc.dimension = TextureDimension.Tex2D;
-        sourceDesc.enableRandomWrite = false;
-        sourceDesc.depthBufferBits = 0;
-        sourceDesc.volumeDepth = 16;
-        sourceDesc.autoGenerateMips = false;
-        sourceDesc.msaaSamples = 1;
-        sourceDesc.sRGB = false;
-
-        cmd.GetTemporaryRT(sourceId, sourceDesc, FilterMode.Bilinear);
-        var currentSourceId = new RenderTargetIdentifier(BuiltinRenderTextureType.CameraTarget);
+        // var sourceDesc = new RenderTextureDescriptor(Screen.width / 2, Screen.height / 2);
+        var sourceDesc = new RenderTextureDescriptor(context.Source.width / 2, context.Source.height / 2);
+        var currentSource = context.Source;// new RenderTargetIdentifier(tempId);//"_TEMP");// context.SourceId;
+        // var currentSourceId = context.SourceId;
 
         var filterParams = Vector4.zero;
         var knee = _threshold * _softThreshold;
@@ -48,7 +53,125 @@ public class Bloom : PostProcessEffect, IPostProcessComponent
         filterParams.w = 0.25f / (knee + 0.00001f);
         context.UberMaterial.SetVector("_FilterParams", filterParams);
         context.UberMaterial.SetFloat("_Intensity", _intensity);
-        cmd.SetGlobalTexture("_SourceTex", new RenderTargetIdentifier(BuiltinRenderTextureType.CameraTarget));//currentSourceId);
+        // cmd.SetGlobalTexture("_SourceTex", context.SourceId);
+        context.UberMaterial.SetTexture("_SourceTex", context.Source);
+
+
+        //TODO: Uber Test.................
+        // context.QuaterTex = RenderTexture.GetTemporary(new RenderTextureDescriptor(context.Source.width / 4, context.Source.height / 4));
+        // Graphics.Blit(context.Source, context.QuaterTex, context.UberMaterial, 0);
+
+        // context.UberMaterial.SetTexture("_QuaterTex", context.QuaterTex);
+        // return;
+        //-------------------
+
+        var width = sourceDesc.width;
+        var height = sourceDesc.height;
+
+        var pathIndex = 0;
+        var i = 0;
+        RenderTextureDescriptor currentDesc;
+
+        // ダウンサンプリング
+        for (; i < _iteration; i++)
+        {
+            // width /= 2;
+            // height /= 2;
+            if (width < 2 || height < 2)
+            {
+                break;
+            }
+            currentDesc = descs[i] = new RenderTextureDescriptor(width, height);
+
+            // 最初の一回は明度抽出用のパスを使ってダウンサンプリングする
+            pathIndex = i == 0 ? 0 : 1;
+            // var descId = $"_{width}_{height}";
+            // ids[i] = descId;
+
+            textures[i] = RenderTexture.GetTemporary(currentDesc);//, FilterMode.Bilinear);
+
+            context.UberMaterial.SetTexture("_MainTex", currentSource);
+            // cmd.SetGlobalTexture("_MainTex", currentSourceId);
+            Graphics.Blit(currentSource, textures[i], context.UberMaterial, pathIndex);
+            currentSource = textures[i];
+            width /= 2;
+            height /= 2;
+        }
+
+        // アップサンプリング
+        for (i -= 2; i >= 0; i--)
+        {
+            currentDesc = descs[i];
+            // cmd.SetGlobalTexture("_MainTex", currentSourceId);
+            context.UberMaterial.SetTexture("_MainTex", currentSource);
+            // Blit時にマテリアルとパスを指定する
+            Graphics.Blit(currentSource, textures[i], context.UberMaterial, 2);
+            RenderTexture.ReleaseTemporary(currentSource);
+            currentSource = textures[i];
+        }
+        // 最後にdestにBlit
+        pathIndex = _debug ? 4 : 3;
+        Graphics.Blit(currentSource, context.Dest, context.UberMaterial, pathIndex);
+        context.Swap();
+        RenderTexture.ReleaseTemporary(currentSource);
+    }
+
+    public override void Render(PostProcessContext context)
+    {
+        if (!IsEnabled)
+        {
+            context.UberMaterial.DisableKeyword("BLOOM");
+            return;
+        }
+        context.UberMaterial.EnableKeyword("BLOOM");
+
+        if (context.useOnRenderImage)
+        {
+            RenderForOnRenderImage(context);
+            return;
+        }
+
+
+        var cmd = context.CommandBuffer;
+
+        // cmd.SetGlobalTexture("_MainTex", context.SourceId);
+        // var tempId = Shader.PropertyToID("_TEMP2");
+        // context.CommandBuffer.GetTemporaryRT(tempId, Screen.width / 2, Screen.height / 2, 0, FilterMode.Bilinear, RenderTextureFormat.DefaultHDR);
+        // context.CommandBuffer.Blit(context.SourceId, context.DestinationId, context.UberMaterial, 8);
+        //TODO: 実機だと、このSourceIdが映ってなくて真っ黒になっているっぽい。
+        // if (blitCopy == null)
+        // {
+        //     blitCopy = new Material(Shader.Find("Hidden/BlitCopy"));
+        // }
+        // context.CommandBuffer.Blit(context.SourceId, tempId, blitCopy, 0);
+        // context.CommandBuffer.Blit(tempId, context.DestinationId, context.UberMaterial, 0);
+
+        // int texID = Shader.PropertyToID("_TEMP");
+        // cmd.GetTemporaryRT(texID, Screen.width, Screen.height);// camera.pixelWidth, camera.pixelHeight);
+        // cmd.Blit(context.SourceId, texID);
+        // cmd.Blit(texID, BuiltinRenderTextureType.CameraTarget, new Material(Shader.Find("Hidden/BlitCopy")));
+        // var tempId = Shader.PropertyToID("_TEMP");
+        // var tempId = new RenderTargetIdentifier("_TEMP");
+        // cmd.SetRenderTarget(new RenderTargetIdentifier(BuiltinRenderTextureType.CameraTarget));// context.SourceId);
+        // cmd.SetRenderTarget(new RenderTargetIdentifier(BuiltinRenderTextureType.CameraTarget));// context.SourceId);
+        // cmd.Blit(new RenderTargetIdentifier(BuiltinRenderTextureType.CameraTarget), context.SourceId);//,context.DestinationId);
+        // cmd.SetGlobalTexture("_MainTex",);
+        // cmd.SetGlobalTexture("_MainTex", new RenderTargetIdentifier(BuiltinRenderTextureType.CameraTarget));// currentSourceId);
+        // cmd.GetTemporaryRT(Shader.PropertyToID("_TEMP"), Screen.width, Screen.height);
+        // cmd.Blit(context.SourceId, tempId);
+        var sourceDesc = new RenderTextureDescriptor(Screen.width / 2, Screen.height / 2);
+        var currentSourceId = context.SourceId;// new RenderTargetIdentifier(tempId);//"_TEMP");// context.SourceId;
+        // var currentSourceId = context.SourceId;
+
+        var filterParams = Vector4.zero;
+        var knee = _threshold * _softThreshold;
+        filterParams.x = _threshold;
+        filterParams.y = _threshold - knee;
+        filterParams.z = knee * 2.0f;
+        filterParams.w = 0.25f / (knee + 0.00001f);
+        context.UberMaterial.SetVector("_FilterParams", filterParams);
+        context.UberMaterial.SetFloat("_Intensity", _intensity);
+        cmd.SetGlobalTexture("_SourceTex", context.SourceId);
 
         var width = sourceDesc.width;
         var height = sourceDesc.height;
@@ -59,8 +182,8 @@ public class Bloom : PostProcessEffect, IPostProcessComponent
         // ダウンサンプリング
         for (; i < _iteration; i++)
         {
-            width /= 2;
-            height /= 2;
+            // width /= 2;
+            // height /= 2;
             if (width < 2 || height < 2)
             {
                 break;
@@ -73,8 +196,13 @@ public class Bloom : PostProcessEffect, IPostProcessComponent
             ids[i] = descId;
 
             cmd.GetTemporaryRT(Shader.PropertyToID(descId), currentDesc, FilterMode.Bilinear);
+
+            cmd.SetGlobalTexture("_MainTex", currentSourceId);
             cmd.Blit(currentSourceId, ids[i], context.UberMaterial, pathIndex);
+            // BlitFullscreenTriangle(cmd,currentSourceId,ids[i]);
             currentSourceId = descId;
+            width /= 2;
+            height /= 2;
         }
 
         // アップサンプリング
@@ -82,6 +210,7 @@ public class Bloom : PostProcessEffect, IPostProcessComponent
         {
             currentDesc = descs[i];
 
+            cmd.SetGlobalTexture("_MainTex", currentSourceId);
             // Blit時にマテリアルとパスを指定する
             cmd.Blit(currentSourceId, ids[i], context.UberMaterial, 2);
             cmd.ReleaseTemporaryRT(Shader.PropertyToID(currentSourceId.ToString()));
@@ -89,7 +218,7 @@ public class Bloom : PostProcessEffect, IPostProcessComponent
         }
         // 最後にdestにBlit
         pathIndex = _debug ? 4 : 3;
-        cmd.Blit(currentSourceId, destId, context.UberMaterial, pathIndex);
+        cmd.Blit(currentSourceId, context.DestinationId, context.UberMaterial, pathIndex);
         cmd.ReleaseTemporaryRT(Shader.PropertyToID(currentSourceId.ToString()));
     }
 }

@@ -105,11 +105,7 @@ GameObject:
   - component: {fileID: 12400000}
   - component: {fileID: 8100000}
   - component: {fileID: 11400012}
-  - component: {fileID: 1622520240330670674}
-  - component: {fileID: 5986002914403453871}
-  - component: {fileID: 4859688000481346433}
-  - component: {fileID: 1849332557636753105}
-  - component: {fileID: 1127207826026244509}
+  - component: {fileID: 6260038846308637930}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -210,7 +206,7 @@ MonoBehaviour:
   rotationComponents: {x: 1, y: 1, z: 0}
   positionOctave: 3
   rotationOctave: 3
---- !u!114 &1622520240330670674
+--- !u!114 &6260038846308637930
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -219,126 +215,15 @@ MonoBehaviour:
   m_GameObject: {fileID: 100006}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f5e1fa8aafb69c24fb2a899540f523ee, type: 3}
+  m_Script: {fileID: 11500000, guid: b207da477178f7f4bb1426cd64628e5e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!114 &5986002914403453871
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 100006}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9ed3b02a2e64fde43a987cdb8db75c03, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _iteration: 7
-  _threshold: 0.3
-  _softThreshold: 0.635
-  _intensity: 1
-  _debug: 0
-  _material: {fileID: 2100000, guid: 6bfbc4e4e0b8d7d40bfd1675cd4f4fef, type: 2}
---- !u!114 &4859688000481346433
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 100006}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 948f4100a11a5c24981795d21301da5c, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  volumeTrigger: {fileID: 400006}
-  volumeLayer:
-    serializedVersion: 2
-    m_Bits: 3146038
-  stopNaNPropagation: 1
-  finalBlitToCameraTarget: 0
-  antialiasingMode: 0
-  temporalAntialiasing:
-    jitterSpread: 0.75
-    sharpness: 0.25
-    stationaryBlending: 0.95
-    motionBlending: 0.85
-  subpixelMorphologicalAntialiasing:
-    quality: 2
-  fastApproximateAntialiasing:
-    fastMode: 0
-    keepAlpha: 0
-  fog:
-    enabled: 1
-    excludeSkybox: 1
-  debugLayer:
-    lightMeter:
-      width: 512
-      height: 256
-      showCurves: 1
-    histogram:
-      width: 512
-      height: 256
-      channel: 3
-    waveform:
-      exposure: 0.12
-      height: 256
-    vectorscope:
-      size: 256
-      exposure: 0.12
-    overlaySettings:
-      linearDepth: 0
-      motionColorIntensity: 4
-      motionGridSize: 64
-      colorBlindnessType: 0
-      colorBlindnessStrength: 1
-  m_Resources: {fileID: 11400000, guid: d82512f9c8e5d4a4d938b575d47f88d4, type: 2}
-  m_ShowToolkit: 0
-  m_ShowCustomSorter: 0
-  breakBeforeColorGrading: 0
-  m_BeforeTransparentBundles: []
-  m_BeforeStackBundles: []
-  m_AfterStackBundles: []
---- !u!114 &1849332557636753105
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 100006}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6363bba448bf64e60a763433f9ddf81b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _threshold: 1.9
-  _softKnee: 1
-  _radius: 5.26
-  _intensity: 0.8
-  _highQuality: 0
-  _antiFlicker: 1
-  _shader: {fileID: 4800000, guid: 5a711a01011934ebcb58ef5ad52159d6, type: 3}
---- !u!114 &1127207826026244509
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 100006}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7c8d76155f53cfc45b4f02922de468b3, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _pointOfFocus: {fileID: 400052}
-  _focusDistance: 10
-  _fNumber: 7.78
-  _useCameraFov: 0
-  _focalLength: 0.077
-  _kernelSize: 1
-  _visualize: 0
-  _shader: {fileID: 4800000, guid: b99c58356816f7b46818fe7e788b2fa1, type: 3}
+  uberMaterial: {fileID: 2100000, guid: fa0f4c2347e7e134e8d6b5e03dcf47ca, type: 2}
+  profile: {fileID: 11400000, guid: 5f9d2c7bd1eb5064989fad57d5df7e7d, type: 2}
+  useOnRenderImage: 1
+  mobileModeGaussianBlur: 0
+  gaussianBlur: 0
+  gaussianBlurMaterial: {fileID: 0}
 --- !u!1 &100008
 GameObject:
   m_ObjectHideFlags: 0
