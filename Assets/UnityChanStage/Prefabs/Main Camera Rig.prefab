@@ -221,9 +221,12 @@ MonoBehaviour:
   uberMaterial: {fileID: 2100000, guid: fa0f4c2347e7e134e8d6b5e03dcf47ca, type: 2}
   profile: {fileID: 11400000, guid: 5f9d2c7bd1eb5064989fad57d5df7e7d, type: 2}
   useOnRenderImage: 1
+  renderScale: 1
+  image: {fileID: 0}
   mobileModeGaussianBlur: 0
   gaussianBlur: 0
   gaussianBlurMaterial: {fileID: 0}
+  renderTexMat: {fileID: 2100000, guid: 955886e102a7d8f4c8eae0314666a146, type: 2}
 --- !u!1 &100008
 GameObject:
   m_ObjectHideFlags: 0

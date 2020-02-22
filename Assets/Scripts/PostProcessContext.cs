@@ -8,6 +8,7 @@ public class PostProcessContext
     public RenderTargetIdentifier SourceId { get; private set; } = new RenderTargetIdentifier(BuiltinRenderTextureType.CameraTarget);
     public RenderTargetIdentifier DestinationId { get; private set; } = new RenderTargetIdentifier(BuiltinRenderTextureType.CameraTarget);
     public int MainTexId { get; private set; } = Shader.PropertyToID("_MainTex");
+    public RenderTextureDescriptor SourceDescriptor { get; set; }
 
     // OnRenderImage test.
     public RenderTexture Source { get; set; }
@@ -26,12 +27,22 @@ public class PostProcessContext
     {
         CommandBuffer = commandBuffer;
         UberMaterial = uberMaterial;
+        // SourceDescriptor = sourceDesc;
     }
 
     public void Swap()
     {
-        var source = Source;
-        Source = Dest;
-        Dest = source;
+        if (useOnRenderImage)
+        {
+            var source = Source;
+            Source = Dest;
+            Dest = source;
+        }
+        else
+        {
+            var source = SourceId;
+            SourceId = DestinationId;
+            DestinationId = SourceId;
+        }
     }
 }

@@ -41,7 +41,7 @@ public class Bloom : PostProcessEffect, IPostProcessComponent
     void RenderForOnRenderImage(PostProcessContext context)
     {
         // var sourceDesc = new RenderTextureDescriptor(Screen.width / 2, Screen.height / 2);
-        var sourceDesc = new RenderTextureDescriptor(context.Source.width / 2, context.Source.height / 2);
+        var sourceDesc = new RenderTextureDescriptor(context.Source.width / 4, context.Source.height / 4);
         var currentSource = context.Source;// new RenderTargetIdentifier(tempId);//"_TEMP");// context.SourceId;
         // var currentSourceId = context.SourceId;
 
@@ -98,20 +98,34 @@ public class Bloom : PostProcessEffect, IPostProcessComponent
             height /= 2;
         }
 
+        context.UberMaterial.SetTexture("_BloomTex1", textures[0]);
+        context.UberMaterial.SetTexture("_BloomTex2", textures[1]);
+        context.UberMaterial.SetTexture("_BloomTex3", textures[2]);
+        context.UberMaterial.SetTexture("_BloomTex4", textures[3]);
+        context.UberMaterial.SetTexture("_BloomTex5", textures[4]);
+        context.UberMaterial.SetTexture("_BloomTex6", textures[5]);
+
         // アップサンプリング
-        for (i -= 2; i >= 0; i--)
-        {
-            currentDesc = descs[i];
-            // cmd.SetGlobalTexture("_MainTex", currentSourceId);
-            context.UberMaterial.SetTexture("_MainTex", currentSource);
-            // Blit時にマテリアルとパスを指定する
-            Graphics.Blit(currentSource, textures[i], context.UberMaterial, 2);
-            RenderTexture.ReleaseTemporary(currentSource);
-            currentSource = textures[i];
-        }
+        // for (i -= 2; i >= 0; i--)
+        // {
+        //     currentDesc = descs[i];
+        //     // cmd.SetGlobalTexture("_MainTex", currentSourceId);
+        //     context.UberMaterial.SetTexture("_MainTex", currentSource);
+        //     // Blit時にマテリアルとパスを指定する
+        //     Graphics.Blit(currentSource, textures[i], context.UberMaterial, 2);
+        //     RenderTexture.ReleaseTemporary(currentSource);
+        //     currentSource = textures[i];
+        // }
         // 最後にdestにBlit
         pathIndex = _debug ? 4 : 3;
-        Graphics.Blit(currentSource, context.Dest, context.UberMaterial, pathIndex);
+        // Graphics.Blit(currentSource, context.Dest, context.UberMaterial, pathIndex);
+        Graphics.Blit(context.Source, context.Dest, context.UberMaterial, pathIndex);
+
+        for (var idx = 0; idx < textures.Length; idx++)
+        {
+            RenderTexture.ReleaseTemporary(textures[idx]);
+        }
+
         context.Swap();
         RenderTexture.ReleaseTemporary(currentSource);
     }

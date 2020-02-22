@@ -23,6 +23,12 @@
         float4 _HalfTex_TexelSize;
         sampler2D _QuaterTex;
         sampler2D _SixteenthTex;
+        sampler2D _BloomTex1;
+        sampler2D _BloomTex2;
+        sampler2D _BloomTex3;
+        sampler2D _BloomTex4;
+        sampler2D _BloomTex5;
+        sampler2D _BloomTex6;
 
         // _Thresholdを削除して_FilterParamsを追加
         half4 _FilterParams;
@@ -52,8 +58,8 @@
         }
 
         half getBrightness(half3 color){
-            return Luminance(color);
-            // return max(color.r, max(color.g, color.b));
+            // return Luminance(color);
+            return max(color.r, max(color.g, color.b));
         }
 
         // half4 Blur( half2 dir,v2f i)
@@ -98,17 +104,19 @@
             fixed4 frag (v2f i) : SV_Target
             {
                 // 色抽出にソフトニーを適用
+
                 half4 col = 1;
                 // col.rgb = sampleBox(i.uv, 1.0);
                 col = tex2D(_MainTex, i.uv);
                 half brightness = getBrightness(col.rgb);
 
-                half soft = brightness - _FilterParams.y;
-                soft = clamp(soft, 0, _FilterParams.z);
-                soft = soft * soft * _FilterParams.w;
-                half contribution = max(soft, brightness - _FilterParams.x);
-                contribution /= max(brightness, 0.00001);
-                return col * contribution;
+                // half soft = brightness - _FilterParams.y;
+                // soft = clamp(soft, 0, _FilterParams.z);
+                // soft = soft * soft * _FilterParams.w;
+                // half contribution = max(soft, brightness - _FilterParams.x);
+                // contribution /= max(brightness, 0.00001);
+                
+                return col * brightness;// contribution;
             }
 
             ENDCG
@@ -158,8 +166,16 @@
             fixed4 frag (v2f i) : SV_Target
             {
                 half4 col = tex2D(_SourceTex, i.uv);
-                col.rgb += sampleBox(i.uv, 1) * _Intensity;
-                return col;
+                
+                half4 bloom =tex2D(_BloomTex1, i.uv);//.rgb;
+                bloom.rgb += tex2D(_BloomTex2, i.uv).rgb;
+                bloom.rgb += tex2D(_BloomTex3, i.uv).rgb;
+                // col.rgb += tex2D(_BloomTex4, i.uv).rgb;
+                // col.rgb += tex2D(_BloomTex5, i.uv).rgb;
+                // col.rgb += tex2D(_BloomTex6, i.uv).rgb;
+                bloom.rgb *= _Intensity;
+                // col.rgb += sampleBox(i.uv, 1) * _Intensity;
+                return col + bloom;
             }
 
             ENDCG
@@ -200,6 +216,8 @@
             fixed4 frag(v2f i) : SV_Target {
                 half4 color = 1;//tex2D(_MainTex, i.uv);
                 color.rgb = sampleBox(i.uv , 1);
+                color.rgb += sampleBox(i.uv , 2);
+                color.rgb *= 0.5;
 
                 // // Gaussian Blur
                 // float weights[5] = { 0.22702702702, 0.19459459459, 0.12162162162, 0.05405405405, 0.01621621621 };
@@ -262,6 +280,22 @@
         // 8 :Uber.
         Pass {
             CGPROGRAM
+            #pragma vertex vertUber
+            #pragma fragment frag
+            
+            struct v2f_uber
+            {
+                float2 uv : TEXCOORD0;
+                float4 vertex : SV_POSITION;
+            };
+        
+            v2f_uber vertUber (appdata v)
+            {
+                v2f_uber o;
+                o.vertex = UnityObjectToClipPos(v.vertex);
+                o.uv = TRANSFORM_TEX(v.uv, _MainTex);
+                return o;
+            }
 
             half GetBright(float2 uv)
             {
@@ -355,7 +389,7 @@
             //     return sum * 0.5*brightness;
             // }
 
-            fixed4 frag(v2f i) : SV_Target {
+            fixed4 frag(v2f_uber i) : SV_Target {
                 fixed4 finalColor = tex2D(_MainTex, i.uv);
                 #ifdef GRAYSCALE
                 finalColor = Luminance(finalColor);

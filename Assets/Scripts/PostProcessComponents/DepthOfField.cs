@@ -31,24 +31,24 @@ public class DepthOfField : PostProcessEffect, IPostProcessComponent
     {
         var desc = new RenderTextureDescriptor(context.Source.width / 2, context.Source.height / 2);
         var rt1 = RenderTexture.GetTemporary(desc);//, FilterMode.Bilinear);
-        var rt2 = RenderTexture.GetTemporary(desc);//, FilterMode.Bilinear);
+        // var rt2 = RenderTexture.GetTemporary(desc);//, FilterMode.Bilinear);
 
-        var h = new Vector2(1, 0);
-        var v = new Vector2(0, 1);
+        // var h = new Vector2(1, 0);
+        // var v = new Vector2(0, 1);
 
         // Scale Down
         // cmd.Blit(srcId, context.Rt1Id);
-        Graphics.Blit(context.Source, rt1);
+        Graphics.Blit(context.Source, rt1, context.UberMaterial, GaussianBlurShaderPass);
 
         // 0: Gaussian Blur
-        for (int i = 0; i < 3; i++)
+        // for (int i = 0; i < 3; i++)
         {
             // .SetGlobalVector(_Direction, h);
-            context.UberMaterial.SetVector(_Direction, h);
-            Graphics.Blit(rt1, rt2, context.UberMaterial, GaussianBlurShaderPass);
+            // context.UberMaterial.SetVector(_Direction, h);
+            // Graphics.Blit(rt1, rt2, context.UberMaterial, GaussianBlurShaderPass);
             // cmd.SetGlobalVector(_Direction, v);
-            context.UberMaterial.SetVector(_Direction, v);
-            Graphics.Blit(rt2, rt1, context.UberMaterial, GaussianBlurShaderPass);
+            // context.UberMaterial.SetVector(_Direction, v);
+            // Graphics.Blit(rt2, rt1, context.UberMaterial, GaussianBlurShaderPass);
         }
 
         // 1: DOF
@@ -60,7 +60,7 @@ public class DepthOfField : PostProcessEffect, IPostProcessComponent
         Graphics.Blit(context.Source, context.Dest, context.UberMaterial, DofShaderPass);
         context.Swap();
 
-        RenderTexture.ReleaseTemporary(rt2);
+        // RenderTexture.ReleaseTemporary(rt2);
         RenderTexture.ReleaseTemporary(rt1);
     }
 

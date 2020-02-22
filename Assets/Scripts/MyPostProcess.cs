@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using UnityEngine.Rendering;
+using System.Collections.Generic;
 
 [ExecuteAlways]
 public class MyPostProcess : MonoBehaviour
@@ -21,6 +22,8 @@ public class MyPostProcess : MonoBehaviour
     PostProcessContext Context;
     CommandBuffer cmd;
     RenderTexture renderTexture;
+    RenderTexture temp;
+    RenderTexture myRenderTexture;
 
     //TODO: for specific layer mask
     // Camera layerCamera;
@@ -54,65 +57,124 @@ public class MyPostProcess : MonoBehaviour
 
         //TODO: make specific layer camera test.
         // MakeCamera();
+        var width = 856;// 1340;//Screen.width / 2;
+        var height = 480;//750;//Screen.height / 2;
+        myRenderTexture = RenderTexture.GetTemporary(width, height, 16);//(int)(Screen.width * renderScale), (int)(Screen.height * renderScale), 16);
+        // tempSource = RenderTexture.GetTemporary(width / 4, height / 4, 16);//(int)(Screen.width * renderScale), (int)(Screen.height * renderScale), 16);
+        temp = RenderTexture.GetTemporary(width, height, 16);
+        // new RenderTextureDescriptor((int)(width / 4), (int)(height / 4)));
     }
 
     void OnDisable()
     {
         camera.RemoveCommandBuffer(CameraEvent.BeforeImageEffects, cmd);
 
+        camera.targetTexture = null;
+        RenderTexture.ReleaseTemporary(temp);
         //TODO:
         // RenderTexture.ReleaseTemporary(layerCameraTarget);
         // DestroyImmediate(layerCamera.gameObject);
         // camera.targetTexture = null;
         // RenderTexture.ReleaseTemporary(renderTexture);
-    }
-
-    void OnRenderImage(RenderTexture source, RenderTexture dest)
-    {
-        if (useOnRenderImage)
-        {
-            if (profile != null)
-            {
-                Context.useOnRenderImage = useOnRenderImage;
-                if (profile.EnabledAny())
-                {
-                    var temp = RenderTexture.GetTemporary(
-                        new RenderTextureDescriptor((int)(Screen.width * renderScale), (int)(Screen.height * renderScale)));
-                    Graphics.Blit(source, temp);
-                    Context.Source = source;
-                    Context.Dest = temp;
-                    profile.Render(Context);
-
-                    //TODO: experiment
-                    // Context.UberMaterial.SetTexture("_MainTex",);
-                    // temp => temp2
-                    // Source + temp2 => dest
-
-                    Graphics.Blit(Context.Source, dest, Context.UberMaterial, 8);
-                    // Graphics.Blit(temp, dest, Context.UberMaterial, 8);
-                    // Graphics.Blit(source, dest);
-
-                    RenderTexture.ReleaseTemporary(temp);
-
-                    //TODO: experiment
-                    // RenderTexture.ReleaseTemporary(Context.QuaterTex);
-                }
-                else
-                {
-                    Graphics.Blit(source, dest);
-                }
-            }
-        }
-        else
-        {
-            Graphics.Blit(source, dest);
-        }
+        RenderTexture.ReleaseTemporary(myRenderTexture);
     }
 
     void OnPreRender()
     {
-        BuildCommandBuffer();
+        camera.targetTexture = myRenderTexture;
     }
+
+    void OnPostRender()
+    {
+        // camera.targetTexture = null; //null means framebuffer
+        Context.useOnRenderImage = true;
+        var source = myRenderTexture;
+        Graphics.Blit(source, temp);
+        Context.Source = source;
+        Context.Dest = temp;
+        profile.Render(Context);
+
+        // Graphics.Blit(temp, myRenderTexture, Context.UberMaterial, 8);
+
+        // Context.UberMaterial.SetTexture("_MainTex", Context.Dest);//.Source);
+        // Graphics.Blit(Context.Source, null as RenderTexture);//, Context.UberMaterial, 8);
+        // Graphics.Blit(Context.Dest, null as RenderTexture, Context.UberMaterial, 8);
+        // Graphics.Blit(Context.Source, Context.Dest, Context.UberMaterial, 8);
+        image.texture = Context.Source;
+
+        //TODO: まっくろ。
+        // Context.UberMaterial.SetPass(8);
+        // Graphics.DrawMeshNow(mesh, Vector3.zero, Quaternion.identity);//Context.UberMaterial);//, LayerMask.NameToLayer("Default"));
+
+        //TODO: experiment
+        // RenderTexture.ReleaseTemporary(Context.QuaterTex);
+        // Graphics.Blit(myRenderTexture, null as RenderTexture);//, postProcessMaterial, postProcessMaterialPassNum);
+    }
+    // ---------------------------------------------------------
+
+    //TODO: ON!
+    // void OnRenderImage(RenderTexture source, RenderTexture dest)
+    // {
+    //     if (useOnRenderImage)
+    //     {
+    //         if (profile != null)
+    //         {
+    //             Context.useOnRenderImage = useOnRenderImage;
+    //             if (profile.EnabledAny())
+    //             {
+    //                 var temp = RenderTexture.GetTemporary(
+    //                     new RenderTextureDescriptor((int)(Screen.width * renderScale), (int)(Screen.height * renderScale)));
+    //                 Graphics.Blit(source, temp);
+    //                 Context.Source = source;
+    //                 Context.Dest = temp;
+    //                 profile.Render(Context);
+
+    //                 //TODO: experiment
+    //                 // Context.UberMaterial.SetTexture("_MainTex",);
+    //                 // temp => temp2
+    //                 // Source + temp2 => dest
+
+    //                 Graphics.Blit(Context.Source, dest, Context.UberMaterial, 8);
+    //                 // Graphics.Blit(temp, dest, Context.UberMaterial, 8);
+    //                 // Graphics.Blit(source, dest);
+
+    //                 RenderTexture.ReleaseTemporary(temp);
+
+    //                 //TODO: experiment
+    //                 // RenderTexture.ReleaseTemporary(Context.QuaterTex);
+    //             }
+    //             else
+    //             {
+    //                 Graphics.Blit(source, dest);
+    //             }
+    //         }
+    //     }
+    //     else
+    //     {
+    //         //TODO:...
+    //         // BuildCommandBuffer();
+    //         // var temp = RenderTexture.GetTemporary(
+    //         //     new RenderTextureDescriptor((int)(Screen.width * renderScale), (int)(Screen.height * renderScale)));
+    //         // Graphics.Blit(source, temp);
+    //         // Context.Source = source;
+    //         // Context.Dest = temp;
+
+    //         // // Graphics.Blit(Context.Source, dest, Context.UberMaterial, 8);
+    //         // // Graphics.Blit(temp, dest, Context.UberMaterial, 8);
+    //         // // Graphics.Blit(source, dest);
+
+    //         // RenderTexture.ReleaseTemporary(temp);
+
+    //         // // Graphics.Blit(source, dest);
+    //         // cmd.Blit((RenderTargetIdentifier)source, dest);
+    //         // Graphics.ExecuteCommandBuffer(cmd);
+    //     }
+    // }
+
+    // void OnPreRender()
+    // {
+    //     BuildCommandBuffer();
+    // }
 
     void BuildCommandBuffer()
     {

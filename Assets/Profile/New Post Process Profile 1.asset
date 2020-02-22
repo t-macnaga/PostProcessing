@@ -13,10 +13,10 @@ MonoBehaviour:
   m_Name: Bloom
   m_EditorClassIdentifier: 
   isEnabled: 1
-  _iteration: 4
-  _threshold: 0.275
-  _softThreshold: 0.237
-  _intensity: 0.77
+  _iteration: 3
+  _threshold: 0.352
+  _softThreshold: 0.381
+  _intensity: 0.72
   _debug: 0
 --- !u!114 &-6075895494862549853
 MonoBehaviour:
@@ -30,8 +30,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a6fdc12f4932f4942bf0d0e941910fb3, type: 3}
   m_Name: DepthOfField
   m_EditorClassIdentifier: 
-  isEnabled: 0
-  depth: 0.06
+  isEnabled: 1
+  depth: 0.1
   radious: 0.21
 --- !u!114 &11400000
 MonoBehaviour:
