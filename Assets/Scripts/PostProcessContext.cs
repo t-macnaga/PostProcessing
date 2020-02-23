@@ -15,7 +15,6 @@ namespace PostProcess
         // OnRenderImage test.
         public RenderTexture Source { get; set; }
         public RenderTexture Dest { get; set; }
-        public bool useOnRenderImage;
         public RenderTexture QuaterTex;
         //
         public PostProcessContext(RenderTexture source, RenderTexture dest, Material uberMaterial)
@@ -34,18 +33,18 @@ namespace PostProcess
 
         public void Swap()
         {
-            if (useOnRenderImage)
-            {
-                var source = Source;
-                Source = Dest;
-                Dest = source;
-            }
-            else
-            {
-                var source = SourceId;
-                SourceId = DestinationId;
-                DestinationId = SourceId;
-            }
+            // if (useOnRenderImage)
+            // {
+            //     var source = Source;
+            //     Source = Dest;
+            //     Dest = source;
+            // }
+            // else
+            // {
+            //     var source = SourceId;
+            //     SourceId = DestinationId;
+            //     DestinationId = SourceId;
+            // }
         }
     }
 }

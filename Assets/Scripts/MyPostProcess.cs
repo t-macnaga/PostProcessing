@@ -7,9 +7,7 @@ namespace PostProcess
     [ExecuteAlways]
     public class MyPostProcess : MonoBehaviour
     {
-        public Material uberMaterial;
         public PostProcessProfile profile;
-        public bool useOnRenderImage;
         public float renderScale = 1f;
         public UnityEngine.UI.RawImage image;
         public int targetResolutionWidth = 856;
@@ -21,29 +19,19 @@ namespace PostProcess
         public Material gaussianBlurMaterial;
         #endregion
 
-        // RenderTargetIdentifier[] ids = new RenderTargetIdentifier[30];
-        // RenderTextureDescriptor[] descs = new RenderTextureDescriptor[30];
         PostProcessContext Context;
         CommandBuffer cmd;
-        RenderTexture renderTexture;
         RenderTexture temp;
         RenderTexture halfSource;
         RenderTexture dest;
-        int tempId = Shader.PropertyToID("temp");
         RenderTexture myRenderTexture;
+        Material material;
 
         //TODO: for specific layer mask
         // Camera layerCamera;
         // RenderTexture layerCameraTarget;
 
-        // RenderTextureDescriptor sourceDesc = new RenderTextureDescriptor();
-        // int sourceId = Shader.PropertyToID("Source");
-
         Camera camera;
-        // RenderTargetIdentifier srcId = new RenderTargetIdentifier(BuiltinRenderTextureType.CameraTarget);
-        // RenderTargetIdentifier destId = new RenderTargetIdentifier(BuiltinRenderTextureType.CameraTarget);
-        // int rt1Id = Shader.PropertyToID("_rt1");
-        // int rt2Id = Shader.PropertyToID("_rt2");
 
         void Awake()
         {
@@ -57,9 +45,10 @@ namespace PostProcess
             //                 new RenderTextureDescriptor((int)(Screen.width * renderScale), (int)(Screen.height * renderScale)));
             // camera.targetTexture = renderTexture;
             // image.texture = renderTexture;
-
+            material = new Material(Shader.Find("Hidden/PostEffect/Uber"));
+            material.hideFlags = HideFlags.HideAndDontSave;
             cmd = new CommandBuffer();
-            Context = new PostProcessContext(cmd, uberMaterial);
+            Context = new PostProcessContext(cmd, material);
             camera.AddCommandBuffer(CameraEvent.BeforeImageEffects, cmd);
 
             //TODO: make specific layer camera test.
@@ -74,6 +63,7 @@ namespace PostProcess
 
             camera.targetTexture = null;
             ReleaseTemporaryRT();
+            DestroyImmediate(material);
         }
 
 #if UNITY_EDITOR
@@ -91,13 +81,11 @@ namespace PostProcess
         void OnPostRender()
         {
             camera.targetTexture = myRenderTexture;
-
-            Context.useOnRenderImage = true;
             cmd.Clear();
 
             var source = myRenderTexture;
             cmd.Blit(source, halfSource);
-            Context.Source = source;//myRenderTexture;
+            Context.Source = source;
             Context.Dest = temp;
             profile.Render(Context);
 
@@ -111,7 +99,7 @@ namespace PostProcess
 
             cmd.Blit(source, dest, Context.UberMaterial, 9);
 
-            image.texture = dest;//source;// Context.Dest;
+            image.texture = dest;
 
             profile.GetEffect<Bloom>().Release();
             profile.GetEffect<DepthOfField>().Release();
@@ -119,9 +107,9 @@ namespace PostProcess
 
         void GetTemporaryRT()
         {
-            var width = targetResolutionWidth * renderScale;// Screen.width / 2;// 856;// 1340;//Screen.width / 2;
-            var height = targetResolutionHeight * renderScale;// Screen.height / 2;// 480;//750;//Screen.height / 2;
-            myRenderTexture = RenderTexture.GetTemporary((int)width, (int)height, 16);//(int)(Screen.width * renderScale), (int)(Screen.height * renderScale), 16);
+            var width = targetResolutionWidth * renderScale;
+            var height = targetResolutionHeight * renderScale;
+            myRenderTexture = RenderTexture.GetTemporary((int)width, (int)height, 16);
             dest = RenderTexture.GetTemporary((int)width, (int)height, 16);
             temp = RenderTexture.GetTemporary((int)width / 2, (int)height / 2, 16);
             halfSource = RenderTexture.GetTemporary((int)width / 2, (int)height / 2, 16);
@@ -138,86 +126,6 @@ namespace PostProcess
             // camera.targetTexture = null;
             // RenderTexture.ReleaseTemporary(renderTexture);
             RenderTexture.ReleaseTemporary(myRenderTexture);
-        }
-
-        //TODO: ON!
-        // void OnRenderImage(RenderTexture source, RenderTexture dest)
-        // {
-        //     if (useOnRenderImage)
-        //     {
-        //         if (profile != null)
-        //         {
-        //             Context.useOnRenderImage = useOnRenderImage;
-        //             if (profile.EnabledAny())
-        //             {
-        //                 var temp = RenderTexture.GetTemporary(
-        //                     new RenderTextureDescriptor((int)(Screen.width * renderScale), (int)(Screen.height * renderScale)));
-        //                 Graphics.Blit(source, temp);
-        //                 Context.Source = source;
-        //                 Context.Dest = temp;
-        //                 profile.Render(Context);
-
-        //                 //TODO: experiment
-        //                 // Context.UberMaterial.SetTexture("_MainTex",);
-        //                 // temp => temp2
-        //                 // Source + temp2 => dest
-
-        //                 Graphics.Blit(Context.Source, dest, Context.UberMaterial, 8);
-        //                 // Graphics.Blit(temp, dest, Context.UberMaterial, 8);
-        //                 // Graphics.Blit(source, dest);
-
-        //                 RenderTexture.ReleaseTemporary(temp);
-
-        //                 //TODO: experiment
-        //                 // RenderTexture.ReleaseTemporary(Context.QuaterTex);
-        //             }
-        //             else
-        //             {
-        //                 Graphics.Blit(source, dest);
-        //             }
-        //         }
-        //     }
-        //     else
-        //     {
-        //         //TODO:...
-        //         // BuildCommandBuffer();
-        //         // var temp = RenderTexture.GetTemporary(
-        //         //     new RenderTextureDescriptor((int)(Screen.width * renderScale), (int)(Screen.height * renderScale)));
-        //         // Graphics.Blit(source, temp);
-        //         // Context.Source = source;
-        //         // Context.Dest = temp;
-
-        //         // // Graphics.Blit(Context.Source, dest, Context.UberMaterial, 8);
-        //         // // Graphics.Blit(temp, dest, Context.UberMaterial, 8);
-        //         // // Graphics.Blit(source, dest);
-
-        //         // RenderTexture.ReleaseTemporary(temp);
-
-        //         // // Graphics.Blit(source, dest);
-        //         // cmd.Blit((RenderTargetIdentifier)source, dest);
-        //         // Graphics.ExecuteCommandBuffer(cmd);
-        //     }
-        // }
-
-        // void OnPreRender()
-        // {
-        //     BuildCommandBuffer();
-        // }
-
-        void BuildCommandBuffer()
-        {
-            cmd.Clear();
-            if (useOnRenderImage) { return; }
-
-            if (profile != null)
-            {
-                profile.Render(Context);
-            }
-
-            // if (gaussianBlur)
-            // {
-            //     SetupGaussianBlur();
-            // }
         }
 
         // void SetupGaussianBlur()

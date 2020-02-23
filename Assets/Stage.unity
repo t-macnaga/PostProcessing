@@ -2245,7 +2245,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b207da477178f7f4bb1426cd64628e5e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  uberMaterial: {fileID: 2100000, guid: fa0f4c2347e7e134e8d6b5e03dcf47ca, type: 2}
+  uberMaterial: {fileID: 0}
   profile: {fileID: 11400000, guid: 5f9d2c7bd1eb5064989fad57d5df7e7d, type: 2}
   useOnRenderImage: 1
   renderScale: 1

@@ -1,4 +1,4 @@
-﻿Shader "PostEffect/Uber"
+﻿Shader "Hidden/PostEffect/Uber"
 {
     Properties{
         _MainTex ("Texture", 2D) = "white" {}
@@ -11,7 +11,8 @@
         #pragma multi_compile __ GRAYSCALE
         #pragma multi_compile __ BLOOM
         #pragma multi_compile __ DOF
-        #pragma shader_feature BLOOM_1 BLOOM_2 BLOOM_3 BLOOM_4 BLOOM_5 BLOOM_6
+        #pragma multi_compile __ CHROMATIC_ABERRATION
+        #pragma multi_compile BLOOM_1 BLOOM_2 BLOOM_3 BLOOM_4 BLOOM_5 BLOOM_6
         #pragma shader_feature GAUSSIAN_BLUR
             
         #include "UnityCG.cginc"
@@ -19,11 +20,12 @@
         sampler2D _MainTex;
         float4 _MainTex_ST;
         float4 _MainTex_TexelSize;
+        //TODO: 未使用
         sampler2D _SourceTex;
-        sampler2D _HalfTex;
-        float4 _HalfTex_TexelSize;
-        sampler2D _QuaterTex;
-        sampler2D _SixteenthTex;
+        // Chromatic Aberration
+        half _ChromaticAberrationSize;
+
+        // Bloom
         sampler2D _BloomTex1;
         sampler2D _BloomTex2;
         sampler2D _BloomTex3;
@@ -333,6 +335,16 @@
             CGPROGRAM
             fixed4 frag(v2f i) : SV_TARGET{
                 fixed4 color = tex2D(_MainTex,i.uv);
+
+                #ifdef CHROMATIC_ABERRATION // inspired by: https://light11.hatenadiary.com/entry/2018/06/20/000151
+                    half2 uvBase = i.uv - 0.5h;
+                    // R値を拡大したものに置き換える
+                    half2 uvR = uvBase * (1.0h - _ChromaticAberrationSize * 2.0h) + 0.5h;
+                    color.r = tex2D(_MainTex, uvR).r;
+                    // G値を拡大したものに置き換える
+                    half2 uvG = uvBase * (1.0h - _ChromaticAberrationSize) + 0.5h;
+                    color.g = tex2D(_MainTex, uvG).g;
+                #endif
                 
                 #ifdef DOF
                     float depth = tex2D(_CameraDepthTexture, i.uv).r;
