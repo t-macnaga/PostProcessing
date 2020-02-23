@@ -8,9 +8,9 @@
         CGINCLUDE
         #pragma vertex vert
         #pragma fragment frag
-        #pragma shader_feature GRAYSCALE
-        #pragma shader_feature BLOOM
-        #pragma shader_feature DOF
+        #pragma multi_compile __ GRAYSCALE
+        #pragma multi_compile __ BLOOM
+        #pragma multi_compile __ DOF
         #pragma shader_feature GAUSSIAN_BLUR
             
         #include "UnityCG.cginc"
@@ -29,6 +29,11 @@
         sampler2D _BloomTex4;
         sampler2D _BloomTex5;
         sampler2D _BloomTex6;
+
+        //DOF
+        uniform sampler2D _BlurTex;
+        uniform half      _Depth;
+        uniform sampler2D _CameraDepthTexture;
 
         // _Thresholdを削除して_FilterParamsを追加
         half4 _FilterParams;
@@ -245,9 +250,9 @@
 
             // Properties
             // uniform sampler2D _MainTex;
-            uniform sampler2D _BlurTex;
-            uniform half      _Depth;
-            uniform sampler2D _CameraDepthTexture;
+            // uniform sampler2D _BlurTex;
+            // uniform half      _Depth;
+            // uniform sampler2D _CameraDepthTexture;
 
             //------------------------------------------------------------------------
             // Fragment Shader
@@ -280,152 +285,30 @@
         // 8 :Uber.
         Pass {
             CGPROGRAM
-            #pragma vertex vertUber
-            #pragma fragment frag
-            
-            struct v2f_uber
-            {
-                float2 uv : TEXCOORD0;
-                float4 vertex : SV_POSITION;
-            };
         
-            v2f_uber vertUber (appdata v)
-            {
-                v2f_uber o;
-                o.vertex = UnityObjectToClipPos(v.vertex);
-                o.uv = TRANSFORM_TEX(v.uv, _MainTex);
-                return o;
-            }
-
-            half GetBright(float2 uv)
-            {
-                // half4 col=1;
-                return tex2D(_QuaterTex, uv).r;
-                // // 色抽出にソフトニーを適用
-                // half4 col = 1;
-                // // col.rgb = sampleBox(uv, 1.0);
-                // // col = tex2D(_HalfTex, uv);
-                // col = tex2D(_QuaterTex, uv);
-                // // col = tex2D(_MainTex, uv);
-                // // return col;
-                // half brightness = getBrightness(col.rgb);
-
-                // half soft = brightness - _FilterParams.y;
-                // soft = clamp(soft, 0, _FilterParams.z);
-                // soft = soft * soft * _FilterParams.w;
-                // half contribution = max(soft, brightness - _FilterParams.x);
-                // contribution /= max(brightness, 0.00001);
-                // return contribution;
-                // half4 result = col * contribution;
-                // sampleBox()
-            }
-            
-            // half3 SampleBox(float2 uv , float delta){
-            //     // float4 offset = _MainTex_TexelSize.xyxy * float2(-delta, delta).xxyy;
-            //     float4 offset = _HalfTex_TexelSize.xyxy * float2(-delta, delta).xxyy;
-            //     half3 sum = 0;
-            //     sum += (uv + offset.xy).rgb;
-            //     sum += GetBright(uv + offset.zy).rgb;
-            //     sum += GetBright(uv + offset.xw).rgb;
-            //     sum += GetBright(uv + offset.zw).rgb;
-            //     return sum * 0.25;
-            // }
-        
-            // half4 Blur( half2 dir,v2f i)
-            // {
-            //     half4 color = tex2D(_MainTex, i.uv);
-            //     float weights[5] = { 0.22702702702, 0.19459459459, 0.12162162162, 0.05405405405, 0.01621621621 };
-            //     float2 offset = dir * _MainTex_TexelSize.xy * 3;//_Radius;
-            //     color.rgb *= weights[0];
-            //     color.rgb += tex2D(_MainTex, i.uv + offset      ).rgb * weights[1];
-            //     color.rgb += tex2D(_MainTex, i.uv - offset      ).rgb * weights[1];
-            //     color.rgb += tex2D(_MainTex, i.uv + offset * 2.0).rgb * weights[2];
-            //     color.rgb += tex2D(_MainTex, i.uv - offset * 2.0).rgb * weights[2];
-            //     color.rgb += tex2D(_MainTex, i.uv + offset * 3.0).rgb * weights[3];
-            //     color.rgb += tex2D(_MainTex, i.uv - offset * 3.0).rgb * weights[3];
-            //     color.rgb += tex2D(_MainTex, i.uv + offset * 4.0).rgb * weights[4];
-            //     color.rgb += tex2D(_MainTex, i.uv - offset * 4.0).rgb * weights[4];
-            //     return color;
-            // }
-            
-            half3 SampleBoxFromBrightness(float2 uv , float delta){
-                float4 offset = _MainTex_TexelSize.xyxy * float2(-delta, delta).xxyy;
-                // float4 offset = _HalfTex_TexelSize.xyxy * float2(-delta, delta).xxyy;
-                half3 sum = 0;
-                // sum += GetBright(uv + offset.xy).rgb;
-                // sum += GetBright(uv + offset.zy).rgb;
-                // sum += GetBright(uv + offset.xw).rgb;
-                // sum += GetBright(uv + offset.zw).rgb;
-                // half4 col = 1;
-                // col.rgb = sampleBox(uv, delta);
-                // half brightness = getBrightness(col.rgb);
-                // half brightness = GetBright(uv);
-                sum += tex2D(_MainTex, uv + offset.xy).rgb * GetBright(uv+offset.xy);
-                sum += tex2D(_MainTex, uv + offset.zy).rgb * GetBright(uv+offset.zy);// brightness;
-                sum += tex2D(_MainTex, uv + offset.xw).rgb * GetBright(uv+offset.xw);// brightness;
-                sum += tex2D(_MainTex, uv + offset.zw).rgb * GetBright(uv+offset.zw);// brightness;
-                return sum * 0.25;
-            }
-
-            // half3 SampleBoxFromBrightness(v2f i , float delta){
-            //     // float4 offset = _MainTex_TexelSize.xyxy * float2(-delta, delta).xxyy;
-            //     // float4 offset = _HalfTex_TexelSize.xyxy * float2(-delta, delta).xxyy;
-            //     half3 sum = 0;
-            //     // sum += GetBright(uv + offset.xy).rgb;
-            //     // sum += GetBright(uv + offset.zy).rgb;
-            //     // sum += GetBright(uv + offset.xw).rgb;
-            //     // sum += GetBright(uv + offset.zw).rgb;
-            //     // half4 col = 1;
-            //     // col.rgb = sampleBox(uv, delta);
-            //     // half brightness = getBrightness(col.rgb);
-            //     half brightness = GetBright(i.uv);
-            //     // sum += tex2D(_MainTex, uv + offset.xy).rgb * GetBright(uv + offset.xy);
-            //     // sum += tex2D(_MainTex, uv + offset.zy).rgb * GetBright(uv+offset.zy);// brightness;
-            //     // sum += tex2D(_MainTex, uv + offset.xw).rgb * GetBright(uv+offset.xw);// brightness;
-            //     // sum += tex2D(_MainTex, uv + offset.zw).rgb * GetBright(uv+offset.zw);// brightness;
-            //     // return sum * 0.25;
-            //     sum += Blur(half2(1,0),i);
-            //     sum += Blur(half2(0,1),i);
-            //     return sum * 0.5*brightness;
-            // }
-
-            fixed4 frag(v2f_uber i) : SV_Target {
+            fixed4 frag(v2f i) : SV_Target {
                 fixed4 finalColor = tex2D(_MainTex, i.uv);
+                
+                #ifdef DOF
+                    float depth = tex2D(_CameraDepthTexture, i.uv).r;
+                    depth = 1.0 / (_ZBufferParams.x * depth + _ZBufferParams.y) * _Depth;
+                    float blur = saturate(depth * _ProjectionParams.z);
+                    finalColor.rgb = lerp(finalColor.rgb, tex2D(_BlurTex, i.uv).rgb, blur);
+                #endif
+                
+                #ifdef BLOOM
+                    half4 bloom =tex2D(_BloomTex1, i.uv);
+                    bloom.rgb += tex2D(_BloomTex2, i.uv).rgb;
+                    bloom.rgb += tex2D(_BloomTex3, i.uv).rgb;
+                    // col.rgb += tex2D(_BloomTex4, i.uv).rgb;
+                    // col.rgb += tex2D(_BloomTex5, i.uv).rgb;
+                    // col.rgb += tex2D(_BloomTex6, i.uv).rgb;
+                    bloom.rgb *= _Intensity;
+                    finalColor += bloom;
+                #endif
+                
                 #ifdef GRAYSCALE
                 finalColor = Luminance(finalColor);
-                #endif
-
-                #ifdef BLOOM
-
-                // ここでやろうとしたが、失敗した。
-
-                // // Down Sample
-                // // half4 col = 1;
-                // col.rgb = SampleBoxFromBrightness(i.uv , 0.5 );
-                // col.rgb += SampleBoxFromBrightness(i.uv , 1.0 );
-                // col.rgb += SampleBoxFromBrightness(i.uv , 1.5 );
-                // col.rgb += SampleBoxFromBrightness(i.uv , 2.0 );
-                // col.rgb *= 0.25;
-                
-                // Up Sample
-
-
-                // // 最後の１回
-                // half4 col = tex2D(_SourceTex, i.uv);
-                // col.rgb += sampleBox(i.uv, 1) * _Intensity;
-                // finalColor += col * _Intensity;
-                // half4 col =1;
-                // // col.rgb = SampleBoxFromBrightness(i,1.0);
-                // col.rgb = SampleBoxFromBrightness(i.uv,1.0);
-                // col.rgb += SampleBoxFromBrightness(i.uv,2.0);
-                // col.rgb += SampleBoxFromBrightness(i.uv,4.0);
-                // col.rgb += SampleBoxFromBrightness(i.uv,8.0);
-                // // col.rgb += SampleBoxFromBrightness(i.uv,10.0);
-                // // col.rgb *= 0.25;
-                // finalColor += col * _Intensity;
-                #endif
-
-                #ifdef DOF
                 #endif
 
                 return finalColor;

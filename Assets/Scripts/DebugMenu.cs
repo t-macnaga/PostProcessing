@@ -76,6 +76,7 @@ public class DebugMenu : MonoBehaviour
     {
         var postProcess = GameObject.FindObjectOfType<MyPostProcess>();
         postProcess.renderScale = scale;
+        postProcess.RebuildTemporaryRT();
     }
 
     public void ToggleBloom(bool on)

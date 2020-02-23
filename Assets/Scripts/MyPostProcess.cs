@@ -10,6 +10,8 @@ public class MyPostProcess : MonoBehaviour
     public bool useOnRenderImage;
     public float renderScale = 1f;
     public UnityEngine.UI.RawImage image;
+    public int targetResolutionWidth = 856;
+    public int targetResolutionHeight = 480;
 
     #region GaussianBlur
     public bool mobileModeGaussianBlur;
@@ -57,12 +59,8 @@ public class MyPostProcess : MonoBehaviour
 
         //TODO: make specific layer camera test.
         // MakeCamera();
-        var width = 856;// 1340;//Screen.width / 2;
-        var height = 480;//750;//Screen.height / 2;
-        myRenderTexture = RenderTexture.GetTemporary(width, height, 16);//(int)(Screen.width * renderScale), (int)(Screen.height * renderScale), 16);
-        // tempSource = RenderTexture.GetTemporary(width / 4, height / 4, 16);//(int)(Screen.width * renderScale), (int)(Screen.height * renderScale), 16);
-        temp = RenderTexture.GetTemporary(width, height, 16);
-        // new RenderTextureDescriptor((int)(width / 4), (int)(height / 4)));
+
+        GetTemporaryRT();
     }
 
     void OnDisable()
@@ -70,13 +68,19 @@ public class MyPostProcess : MonoBehaviour
         camera.RemoveCommandBuffer(CameraEvent.BeforeImageEffects, cmd);
 
         camera.targetTexture = null;
-        RenderTexture.ReleaseTemporary(temp);
-        //TODO:
-        // RenderTexture.ReleaseTemporary(layerCameraTarget);
-        // DestroyImmediate(layerCamera.gameObject);
-        // camera.targetTexture = null;
-        // RenderTexture.ReleaseTemporary(renderTexture);
-        RenderTexture.ReleaseTemporary(myRenderTexture);
+        ReleaseTemporaryRT();
+    }
+
+#if UNITY_EDITOR
+    void OnValidate()
+    {
+        RebuildTemporaryRT();
+    }
+#endif
+    public void RebuildTemporaryRT()
+    {
+        ReleaseTemporaryRT();
+        GetTemporaryRT();
     }
 
     void OnPreRender()
@@ -94,13 +98,9 @@ public class MyPostProcess : MonoBehaviour
         Context.Dest = temp;
         profile.Render(Context);
 
-        // Graphics.Blit(temp, myRenderTexture, Context.UberMaterial, 8);
+        Graphics.Blit(Context.Source, Context.Dest, Context.UberMaterial, 8);
 
-        // Context.UberMaterial.SetTexture("_MainTex", Context.Dest);//.Source);
-        // Graphics.Blit(Context.Source, null as RenderTexture);//, Context.UberMaterial, 8);
-        // Graphics.Blit(Context.Dest, null as RenderTexture, Context.UberMaterial, 8);
-        // Graphics.Blit(Context.Source, Context.Dest, Context.UberMaterial, 8);
-        image.texture = Context.Source;
+        image.texture = Context.Dest;
 
         //TODO: まっくろ。
         // Context.UberMaterial.SetPass(8);
@@ -109,8 +109,29 @@ public class MyPostProcess : MonoBehaviour
         //TODO: experiment
         // RenderTexture.ReleaseTemporary(Context.QuaterTex);
         // Graphics.Blit(myRenderTexture, null as RenderTexture);//, postProcessMaterial, postProcessMaterialPassNum);
+
+        profile.GetEffect<Bloom>().Release();
+        profile.GetEffect<DepthOfField>().Release();
     }
-    // ---------------------------------------------------------
+
+    void GetTemporaryRT()
+    {
+        var width = targetResolutionWidth * renderScale;// Screen.width / 2;// 856;// 1340;//Screen.width / 2;
+        var height = targetResolutionHeight * renderScale;// Screen.height / 2;// 480;//750;//Screen.height / 2;
+        myRenderTexture = RenderTexture.GetTemporary((int)width, (int)height, 16);//(int)(Screen.width * renderScale), (int)(Screen.height * renderScale), 16);
+        temp = RenderTexture.GetTemporary((int)width, (int)height, 16);
+    }
+
+    void ReleaseTemporaryRT()
+    {
+        RenderTexture.ReleaseTemporary(temp);
+        //TODO:
+        // RenderTexture.ReleaseTemporary(layerCameraTarget);
+        // DestroyImmediate(layerCamera.gameObject);
+        // camera.targetTexture = null;
+        // RenderTexture.ReleaseTemporary(renderTexture);
+        RenderTexture.ReleaseTemporary(myRenderTexture);
+    }
 
     //TODO: ON!
     // void OnRenderImage(RenderTexture source, RenderTexture dest)

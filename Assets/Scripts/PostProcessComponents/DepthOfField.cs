@@ -27,10 +27,12 @@ public class DepthOfField : PostProcessEffect, IPostProcessComponent
         _MainTex = Shader.PropertyToID("_MainTex");
     }
 
+    RenderTexture rt1;
+
     void RenderForOnRenderImage(PostProcessContext context)
     {
         var desc = new RenderTextureDescriptor(context.Source.width / 2, context.Source.height / 2);
-        var rt1 = RenderTexture.GetTemporary(desc);//, FilterMode.Bilinear);
+        rt1 = RenderTexture.GetTemporary(desc);//, FilterMode.Bilinear);
         // var rt2 = RenderTexture.GetTemporary(desc);//, FilterMode.Bilinear);
 
         // var h = new Vector2(1, 0);
@@ -57,11 +59,19 @@ public class DepthOfField : PostProcessEffect, IPostProcessComponent
 
         context.UberMaterial.SetTexture(_MainTex, context.Source);
         context.UberMaterial.SetTexture(_BlurTex, rt1);
-        Graphics.Blit(context.Source, context.Dest, context.UberMaterial, DofShaderPass);
-        context.Swap();
+        // Graphics.Blit(context.Source, context.Dest, context.UberMaterial, DofShaderPass);
+        // context.Swap();
 
         // RenderTexture.ReleaseTemporary(rt2);
-        RenderTexture.ReleaseTemporary(rt1);
+        // RenderTexture.ReleaseTemporary(rt1);
+    }
+
+    public void Release()
+    {
+        if (rt1 != null)
+        {
+            RenderTexture.ReleaseTemporary(rt1);
+        }
     }
 
     public override void Render(PostProcessContext context)

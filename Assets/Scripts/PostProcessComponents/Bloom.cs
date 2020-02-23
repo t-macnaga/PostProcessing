@@ -21,30 +21,10 @@ public class Bloom : PostProcessEffect, IPostProcessComponent
     int sourceId = Shader.PropertyToID("Source");
     int halfId = Shader.PropertyToID("_HalfTex");
 
-    // RenderTargetIdentifier destId = new RenderTargetIdentifier(BuiltinRenderTextureType.CameraTarget);
-    // public static void BlitFullscreenTriangle(this CommandBuffer cmd, RenderTargetIdentifier source, RenderTargetIdentifier destination, bool clear = false, Rect? viewport = null)
-    // {
-    //     cmd.SetGlobalTexture("_MainTex", source);
-    //     // cmd.SetRenderTargetWithLoadStoreAction(destination, viewport == null ? LoadAction.DontCare : LoadAction.Load, StoreAction.Store);
-    //     cmd.SetRenderTarget(destination);
-
-    //     if (viewport != null)
-    //         cmd.SetViewport(viewport.Value);
-
-    //     if (clear)
-    //         cmd.ClearRenderTarget(true, true, Color.clear);
-
-    //     cmd.Blit(source,destination);
-    //     // cmd.DrawMesh(fullscreenTriangle, Matrix4x4.identity, copyMaterial, 0, 0);
-    // }
-
     void RenderForOnRenderImage(PostProcessContext context)
     {
-        // var sourceDesc = new RenderTextureDescriptor(Screen.width / 2, Screen.height / 2);
         var sourceDesc = new RenderTextureDescriptor(context.Source.width / 4, context.Source.height / 4);
-        var currentSource = context.Source;// new RenderTargetIdentifier(tempId);//"_TEMP");// context.SourceId;
-        // var currentSourceId = context.SourceId;
-
+        var currentSource = context.Source;
         var filterParams = Vector4.zero;
         var knee = _threshold * _softThreshold;
         filterParams.x = _threshold;
@@ -53,17 +33,7 @@ public class Bloom : PostProcessEffect, IPostProcessComponent
         filterParams.w = 0.25f / (knee + 0.00001f);
         context.UberMaterial.SetVector("_FilterParams", filterParams);
         context.UberMaterial.SetFloat("_Intensity", _intensity);
-        // cmd.SetGlobalTexture("_SourceTex", context.SourceId);
         context.UberMaterial.SetTexture("_SourceTex", context.Source);
-
-
-        //TODO: Uber Test.................
-        // context.QuaterTex = RenderTexture.GetTemporary(new RenderTextureDescriptor(context.Source.width / 4, context.Source.height / 4));
-        // Graphics.Blit(context.Source, context.QuaterTex, context.UberMaterial, 0);
-
-        // context.UberMaterial.SetTexture("_QuaterTex", context.QuaterTex);
-        // return;
-        //-------------------
 
         var width = sourceDesc.width;
         var height = sourceDesc.height;
@@ -117,17 +87,25 @@ public class Bloom : PostProcessEffect, IPostProcessComponent
         //     currentSource = textures[i];
         // }
         // 最後にdestにBlit
-        pathIndex = _debug ? 4 : 3;
-        // Graphics.Blit(currentSource, context.Dest, context.UberMaterial, pathIndex);
-        Graphics.Blit(context.Source, context.Dest, context.UberMaterial, pathIndex);
+        // pathIndex = _debug ? 4 : 3;
+        // // Graphics.Blit(currentSource, context.Dest, context.UberMaterial, pathIndex);
+        // Graphics.Blit(context.Source, context.Dest, context.UberMaterial, pathIndex);
 
+        // for (var idx = 0; idx < textures.Length; idx++)
+        // {
+        //     RenderTexture.ReleaseTemporary(textures[idx]);
+        // }
+
+        // context.Swap();
+        // RenderTexture.ReleaseTemporary(currentSource);
+    }
+
+    public void Release()
+    {
         for (var idx = 0; idx < textures.Length; idx++)
         {
             RenderTexture.ReleaseTemporary(textures[idx]);
         }
-
-        context.Swap();
-        RenderTexture.ReleaseTemporary(currentSource);
     }
 
     public override void Render(PostProcessContext context)
