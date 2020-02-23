@@ -16,7 +16,7 @@ MonoBehaviour:
   _iteration: 3
   _threshold: 0.352
   _softThreshold: 0.381
-  _intensity: 0.76
+  _intensity: 0.4
   _debug: 0
 --- !u!114 &-6075895494862549853
 MonoBehaviour:

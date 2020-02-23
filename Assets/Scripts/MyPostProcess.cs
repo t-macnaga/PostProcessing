@@ -25,6 +25,8 @@ public class MyPostProcess : MonoBehaviour
     CommandBuffer cmd;
     RenderTexture renderTexture;
     RenderTexture temp;
+    RenderTexture halfSource;
+    RenderTexture dest;
     int tempId = Shader.PropertyToID("temp");
     RenderTexture myRenderTexture;
 
@@ -87,44 +89,27 @@ public class MyPostProcess : MonoBehaviour
     void OnPostRender()
     {
         camera.targetTexture = myRenderTexture;
-        // }
 
-        // void OnPostRender()
-        // {
-        // camera.targetTexture = null; //null means framebuffer
         Context.useOnRenderImage = true;
         cmd.Clear();
 
-        //TODO: to property
-        // var width = targetResolutionWidth * renderScale;
-        // var height = targetResolutionHeight * renderScale;
-        // var destDesc = new RenderTextureDescriptor((int)width, (int)height);
-        // cmd.GetTemporaryRT(tempId, destDesc);// (int)width, (int)height, 16);
-
-        // temp = RenderTexture.GetTemporary((int)width, (int)height, 16);
         var source = myRenderTexture;
-        // cmd.Blit(source, tempId);
-        // Graphics.Blit(source, temp);
-        Context.Source = source;
-        // Context.DestinationId = tempId;
+        cmd.Blit(source, halfSource);
+        Context.Source = source;//myRenderTexture;
         Context.Dest = temp;
         profile.Render(Context);
 
-        // Graphics.Blit(Context.Source, Context.Dest, Context.UberMaterial, 8);
-        cmd.Blit(Context.Source, Context.Dest, Context.UberMaterial, 8);
-        // Graphics.ExecuteCommandBuffer(cmd);
-        // var dest = RenderTexture.GetTemporary(destDesc);
+        // Blit Final Blur Tex
+        cmd.Blit(halfSource, Context.Dest, Context.UberMaterial, 8);
+        // Context.Swap();
 
-        image.texture = Context.Dest;
-        // image.texture = dest;//Context.Dest;
+        // cmd.SetGlobalTexture("_MainTex",);
+        Context.UberMaterial.SetTexture("_MainTex", source);
+        Context.UberMaterial.SetTexture("_FinalBlurTex", Context.Dest);
 
-        //TODO: まっくろ。
-        // Context.UberMaterial.SetPass(8);
-        // Graphics.DrawMeshNow(mesh, Vector3.zero, Quaternion.identity);//Context.UberMaterial);//, LayerMask.NameToLayer("Default"));
+        cmd.Blit(source, dest, Context.UberMaterial, 9);
 
-        //TODO: experiment
-        // RenderTexture.ReleaseTemporary(Context.QuaterTex);
-        // Graphics.Blit(myRenderTexture, null as RenderTexture);//, postProcessMaterial, postProcessMaterialPassNum);
+        image.texture = dest;//source;// Context.Dest;
 
         profile.GetEffect<Bloom>().Release();
         profile.GetEffect<DepthOfField>().Release();
@@ -135,12 +120,16 @@ public class MyPostProcess : MonoBehaviour
         var width = targetResolutionWidth * renderScale;// Screen.width / 2;// 856;// 1340;//Screen.width / 2;
         var height = targetResolutionHeight * renderScale;// Screen.height / 2;// 480;//750;//Screen.height / 2;
         myRenderTexture = RenderTexture.GetTemporary((int)width, (int)height, 16);//(int)(Screen.width * renderScale), (int)(Screen.height * renderScale), 16);
-        temp = RenderTexture.GetTemporary((int)width, (int)height, 16);
+        dest = RenderTexture.GetTemporary((int)width, (int)height, 16);
+        temp = RenderTexture.GetTemporary((int)width / 2, (int)height / 2, 16);
+        halfSource = RenderTexture.GetTemporary((int)width / 2, (int)height / 2, 16);
     }
 
     void ReleaseTemporaryRT()
     {
+        RenderTexture.ReleaseTemporary(halfSource);
         RenderTexture.ReleaseTemporary(temp);
+        RenderTexture.ReleaseTemporary(dest);
         //TODO:
         // RenderTexture.ReleaseTemporary(layerCameraTarget);
         // DestroyImmediate(layerCamera.gameObject);

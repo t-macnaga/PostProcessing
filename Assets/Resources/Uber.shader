@@ -34,6 +34,9 @@
         uniform sampler2D _BlurTex;
         uniform half      _Depth;
         uniform sampler2D _CameraDepthTexture;
+        
+        //Final Blur
+        sampler2D _FinalBlurTex;
 
         // _Thresholdを削除して_FilterParamsを追加
         half4 _FilterParams;
@@ -287,14 +290,14 @@
             CGPROGRAM
         
             fixed4 frag(v2f i) : SV_Target {
-                fixed4 finalColor = tex2D(_MainTex, i.uv);
+                fixed4 finalColor =0;//tex2D(_MainTex, i.uv);
                 
-                #ifdef DOF
-                    float depth = tex2D(_CameraDepthTexture, i.uv).r;
-                    depth = 1.0 / (_ZBufferParams.x * depth + _ZBufferParams.y) * _Depth;
-                    float blur = saturate(depth * _ProjectionParams.z);
-                    finalColor.rgb = lerp(finalColor.rgb, tex2D(_BlurTex, i.uv).rgb, blur);
-                #endif
+                // #ifdef DOF
+                //     float depth = tex2D(_CameraDepthTexture, i.uv).r;
+                //     depth = 1.0 / (_ZBufferParams.x * depth + _ZBufferParams.y) * _Depth;
+                //     float blur = saturate(depth * _ProjectionParams.z);
+                //     finalColor.rgb = lerp(finalColor.rgb, tex2D(_BlurTex, i.uv).rgb, blur);
+                // #endif
                 
                 #ifdef BLOOM
                     half4 bloom =tex2D(_BloomTex1, i.uv);
@@ -307,11 +310,34 @@
                     finalColor += bloom;
                 #endif
                 
-                #ifdef GRAYSCALE
-                finalColor = Luminance(finalColor);
-                #endif
 
                 return finalColor;
+            }
+            ENDCG
+        }
+
+        // 9: Final
+        Pass {
+
+            CGPROGRAM
+            fixed4 frag(v2f i) : SV_TARGET{
+                fixed4 color = tex2D(_MainTex,i.uv);
+                
+                #ifdef DOF
+                    float depth = tex2D(_CameraDepthTexture, i.uv).r;
+                    depth = 1.0 / (_ZBufferParams.x * depth + _ZBufferParams.y) * _Depth;
+                    float blur = saturate(depth * _ProjectionParams.z);
+                    color.rgb = lerp(color.rgb, tex2D(_BlurTex, i.uv).rgb, blur);
+                #endif
+                
+                #ifdef BLOOM
+                color += tex2D(_FinalBlurTex,i.uv);
+                #endif
+                
+                #ifdef GRAYSCALE
+                color = Luminance(color);
+                #endif
+                return color;
             }
             ENDCG
         }
