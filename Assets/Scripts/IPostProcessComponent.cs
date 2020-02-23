@@ -1,5 +1,8 @@
-﻿public interface IPostProcessComponent
+﻿namespace PostProcess
 {
-    bool IsEnabled { get; set; }
-    void Render(PostProcessContext context);
+    public interface IPostProcessComponent
+    {
+        bool IsEnabled { get; set; }
+        void Render(PostProcessContext context);
+    }
 }

@@ -11,6 +11,7 @@
         #pragma multi_compile __ GRAYSCALE
         #pragma multi_compile __ BLOOM
         #pragma multi_compile __ DOF
+        #pragma shader_feature BLOOM_1 BLOOM_2 BLOOM_3 BLOOM_4 BLOOM_5 BLOOM_6
         #pragma shader_feature GAUSSIAN_BLUR
             
         #include "UnityCG.cginc"
@@ -290,27 +291,37 @@
             CGPROGRAM
         
             fixed4 frag(v2f i) : SV_Target {
-                fixed4 finalColor =0;//tex2D(_MainTex, i.uv);
-                
-                // #ifdef DOF
-                //     float depth = tex2D(_CameraDepthTexture, i.uv).r;
-                //     depth = 1.0 / (_ZBufferParams.x * depth + _ZBufferParams.y) * _Depth;
-                //     float blur = saturate(depth * _ProjectionParams.z);
-                //     finalColor.rgb = lerp(finalColor.rgb, tex2D(_BlurTex, i.uv).rgb, blur);
-                // #endif
-                
+                fixed4 finalColor = 0;
                 #ifdef BLOOM
                     half4 bloom =tex2D(_BloomTex1, i.uv);
+                    #ifdef BLOOM_2
+                    bloom.rgb += tex2D(_BloomTex2, i.uv).rgb;
+                    #endif
+                    #ifdef BLOOM_3
                     bloom.rgb += tex2D(_BloomTex2, i.uv).rgb;
                     bloom.rgb += tex2D(_BloomTex3, i.uv).rgb;
-                    // col.rgb += tex2D(_BloomTex4, i.uv).rgb;
-                    // col.rgb += tex2D(_BloomTex5, i.uv).rgb;
-                    // col.rgb += tex2D(_BloomTex6, i.uv).rgb;
+                    #endif
+                    #ifdef BLOOM_4
+                    bloom.rgb += tex2D(_BloomTex2, i.uv).rgb;
+                    bloom.rgb += tex2D(_BloomTex3, i.uv).rgb;
+                    bloom.rgb += tex2D(_BloomTex4, i.uv).rgb;
+                    #endif
+                    #ifdef BLOOM_5
+                    bloom.rgb += tex2D(_BloomTex2, i.uv).rgb;
+                    bloom.rgb += tex2D(_BloomTex3, i.uv).rgb;
+                    bloom.rgb += tex2D(_BloomTex4, i.uv).rgb;
+                    bloom.rgb += tex2D(_BloomTex5, i.uv).rgb;
+                    #endif
+                    #ifdef BLOOM_6
+                    bloom.rgb += tex2D(_BloomTex2, i.uv).rgb;
+                    bloom.rgb += tex2D(_BloomTex3, i.uv).rgb;
+                    bloom.rgb += tex2D(_BloomTex4, i.uv).rgb;
+                    bloom.rgb += tex2D(_BloomTex5, i.uv).rgb;
+                    bloom.rgb += tex2D(_BloomTex6, i.uv).rgb;
+                    #endif
                     bloom.rgb *= _Intensity;
                     finalColor += bloom;
                 #endif
-                
-
                 return finalColor;
             }
             ENDCG
@@ -333,7 +344,7 @@
                 #ifdef BLOOM
                 color += tex2D(_FinalBlurTex,i.uv);
                 #endif
-                
+
                 #ifdef GRAYSCALE
                 color = Luminance(color);
                 #endif

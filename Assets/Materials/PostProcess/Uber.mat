@@ -9,7 +9,7 @@ Material:
   m_PrefabAsset: {fileID: 0}
   m_Name: Uber
   m_Shader: {fileID: 4800000, guid: 0be4d8264c9f09b488638287d8d033cd, type: 3}
-  m_ShaderKeywords: BLOOM DOF
+  m_ShaderKeywords: BLOOM BLOOM_6 DOF
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0

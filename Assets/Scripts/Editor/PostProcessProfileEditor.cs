@@ -3,89 +3,92 @@ using UnityEngine;
 using UnityEditor;
 using System.Linq;
 
-[CustomEditor(typeof(PostProcessProfile))]
-public class PostProcessProfileEditor : Editor
+namespace PostProcess
 {
-    static PostProcessProfileEditor profileEditorInstance;
-    PostProcessProfile profile;
-    List<Editor> postProcessEditors;
-    string[] avairableEffectNames;
-    int selectedIndex;
-
-    [MenuItem("CONTEXT/PostProcessEffect/Remove")]
-    static void RemoveEffect(MenuCommand command)
+    [CustomEditor(typeof(PostProcessProfile))]
+    public class PostProcessProfileEditor : Editor
     {
-        profileEditorInstance.RemoveEffect(command.context.name);
-    }
+        static PostProcessProfileEditor profileEditorInstance;
+        PostProcessProfile profile;
+        List<Editor> postProcessEditors;
+        string[] avairableEffectNames;
+        int selectedIndex;
 
-    void OnEnable()
-    {
-        profileEditorInstance = this;
-        profile = target as PostProcessProfile;
-        RefreshEditors();
-        avairableEffectNames = TypeCache.GetTypesDerivedFrom<PostProcessEffect>()
-        .Select(x => x.Name).ToArray();
-    }
-
-    void OnDisable()
-    {
-        profileEditorInstance = null;
-    }
-
-    public override void OnInspectorGUI()
-    {
-        foreach (var editor in postProcessEditors)
+        [MenuItem("CONTEXT/PostProcessEffect/Remove")]
+        static void RemoveEffect(MenuCommand command)
         {
-            editor.DrawHeader();
-            EditorGUILayout.BeginVertical("box");
-            editor.OnInspectorGUI();
-            EditorGUILayout.EndVertical();
+            profileEditorInstance.RemoveEffect(command.context.name);
         }
 
-        selectedIndex = EditorGUILayout.Popup(selectedIndex, avairableEffectNames);
-
-        if (GUILayout.Button("Add Effect"))
+        void OnEnable()
         {
-            AddEffect(avairableEffectNames[selectedIndex]);
+            profileEditorInstance = this;
+            profile = target as PostProcessProfile;
+            RefreshEditors();
+            avairableEffectNames = TypeCache.GetTypesDerivedFrom<PostProcessEffect>()
+            .Select(x => x.Name).ToArray();
         }
-    }
 
-    void AddEffect(string name)
-    {
-        var effect = ScriptableObject.CreateInstance(name) as PostProcessEffect;
-        effect.name = name;
-        AssetDatabase.AddObjectToAsset(effect, profile);
-        profile.Add(effect);
-        Reimport();
-        RefreshEditors();
-    }
-
-    void RemoveEffect(string name)
-    {
-        var assets = AssetDatabase.LoadAllAssetsAtPath(AssetDatabase.GetAssetPath(profile));
-        for (var i = 0; i < assets.Length; i++)
+        void OnDisable()
         {
-            if (AssetDatabase.IsSubAsset(assets[i]) && assets[i].name == name)
+            profileEditorInstance = null;
+        }
+
+        public override void OnInspectorGUI()
+        {
+            foreach (var editor in postProcessEditors)
             {
-                profile.Remove(assets[i] as PostProcessEffect);
-                DestroyImmediate(assets[i], true);
-                break;
+                editor.DrawHeader();
+                EditorGUILayout.BeginVertical("box");
+                editor.OnInspectorGUI();
+                EditorGUILayout.EndVertical();
+            }
+
+            selectedIndex = EditorGUILayout.Popup(selectedIndex, avairableEffectNames);
+
+            if (GUILayout.Button("Add Effect"))
+            {
+                AddEffect(avairableEffectNames[selectedIndex]);
             }
         }
-        Reimport();
-        RefreshEditors();
-    }
 
-    void Reimport()
-    {
-        AssetDatabase.ImportAsset(AssetDatabase.GetAssetPath(profile));
-    }
+        void AddEffect(string name)
+        {
+            var effect = ScriptableObject.CreateInstance(name) as PostProcessEffect;
+            effect.name = name;
+            AssetDatabase.AddObjectToAsset(effect, profile);
+            profile.Add(effect);
+            Reimport();
+            RefreshEditors();
+        }
 
-    void RefreshEditors()
-    {
-        postProcessEditors = AssetDatabase.LoadAllAssetsAtPath(AssetDatabase.GetAssetPath(profile))
-        .Where(x => AssetDatabase.IsSubAsset(x))
-        .Select(x => Editor.CreateEditor(x))
-        .ToList();
+        void RemoveEffect(string name)
+        {
+            var assets = AssetDatabase.LoadAllAssetsAtPath(AssetDatabase.GetAssetPath(profile));
+            for (var i = 0; i < assets.Length; i++)
+            {
+                if (AssetDatabase.IsSubAsset(assets[i]) && assets[i].name == name)
+                {
+                    profile.Remove(assets[i] as PostProcessEffect);
+                    DestroyImmediate(assets[i], true);
+                    break;
+                }
+            }
+            Reimport();
+            RefreshEditors();
+        }
+
+        void Reimport()
+        {
+            AssetDatabase.ImportAsset(AssetDatabase.GetAssetPath(profile));
+        }
+
+        void RefreshEditors()
+        {
+            postProcessEditors = AssetDatabase.LoadAllAssetsAtPath(AssetDatabase.GetAssetPath(profile))
+            .Where(x => AssetDatabase.IsSubAsset(x))
+            .Select(x => Editor.CreateEditor(x))
+            .ToList();
+        }
     }
 }

@@ -1,30 +1,31 @@
 ﻿using UnityEngine;
 using UnityEngine.Rendering;
 
-public class GrayScale : PostProcessEffect, IPostProcessComponent
+namespace PostProcess
 {
-    static readonly int ShaderPass = 7;
-    RenderTargetIdentifier destId = new RenderTargetIdentifier(BuiltinRenderTextureType.CameraTarget);
-
-    public override void Render(PostProcessContext context)
+    public class GrayScale : PostProcessEffect, IPostProcessComponent
     {
-        var cmd = context.CommandBuffer;
-        if (IsEnabled)
-        {
-            context.UberMaterial.EnableKeyword("GRAYSCALE");
-            
-            
+        static readonly int ShaderPass = 7;
+        RenderTargetIdentifier destId = new RenderTargetIdentifier(BuiltinRenderTextureType.CameraTarget);
 
-            var _MainTex = Shader.PropertyToID("_MainTex");
-            cmd.SetGlobalTexture(_MainTex, context.SourceId);
-            // cmd.Blit(context.SourceId, destId, context.UberMaterial, ShaderPass);
-        }
-        else
+        public override void Render(PostProcessContext context)
         {
-            context.UberMaterial.DisableKeyword("GRAYSCALE");
-        }
+            var cmd = context.CommandBuffer;
+            if (IsEnabled)
+            {
+                context.UberMaterial.EnableKeyword("GRAYSCALE");
 
+
+
+                var _MainTex = Shader.PropertyToID("_MainTex");
+                cmd.SetGlobalTexture(_MainTex, context.SourceId);
+                // cmd.Blit(context.SourceId, destId, context.UberMaterial, ShaderPass);
+            }
+            else
+            {
+                context.UberMaterial.DisableKeyword("GRAYSCALE");
+            }
+
+        }
     }
 }
-
-
