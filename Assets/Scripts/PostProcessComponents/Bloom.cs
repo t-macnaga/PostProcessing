@@ -60,9 +60,10 @@ public class Bloom : PostProcessEffect, IPostProcessComponent
 
             textures[i] = RenderTexture.GetTemporary(currentDesc);//, FilterMode.Bilinear);
 
-            context.UberMaterial.SetTexture("_MainTex", currentSource);
-            // cmd.SetGlobalTexture("_MainTex", currentSourceId);
-            Graphics.Blit(currentSource, textures[i], context.UberMaterial, pathIndex);
+            // context.UberMaterial.SetTexture("_MainTex", currentSource);
+            context.CommandBuffer.SetGlobalTexture("_MainTex", currentSource);
+            // Graphics.Blit(currentSource, textures[i], context.UberMaterial, pathIndex);
+            context.CommandBuffer.Blit(currentSource, textures[i], context.UberMaterial, pathIndex);
             currentSource = textures[i];
             width /= 2;
             height /= 2;

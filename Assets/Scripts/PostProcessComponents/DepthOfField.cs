@@ -32,15 +32,18 @@ public class DepthOfField : PostProcessEffect, IPostProcessComponent
     void RenderForOnRenderImage(PostProcessContext context)
     {
         var desc = new RenderTextureDescriptor(context.Source.width / 2, context.Source.height / 2);
-        rt1 = RenderTexture.GetTemporary(desc);//, FilterMode.Bilinear);
+        context.CommandBuffer.GetTemporaryRT(rt1Id, desc);
+        // rt1 = RenderTexture.GetTemporary(desc);//, FilterMode.Bilinear);
         // var rt2 = RenderTexture.GetTemporary(desc);//, FilterMode.Bilinear);
 
         // var h = new Vector2(1, 0);
         // var v = new Vector2(0, 1);
 
+        var cmd = context.CommandBuffer;
         // Scale Down
         // cmd.Blit(srcId, context.Rt1Id);
-        Graphics.Blit(context.Source, rt1, context.UberMaterial, GaussianBlurShaderPass);
+        cmd.Blit(context.Source, rt1Id, context.UberMaterial, GaussianBlurShaderPass);
+        // Graphics.Blit(context.Source, rt1, context.UberMaterial, GaussianBlurShaderPass);
 
         // 0: Gaussian Blur
         // for (int i = 0; i < 3; i++)
@@ -57,8 +60,12 @@ public class DepthOfField : PostProcessEffect, IPostProcessComponent
         // cmd.SetGlobalTexture(_MainTex, context.SourceId);//srcId);
         // cmd.SetGlobalTexture(_BlurTex, rt1Id);
 
-        context.UberMaterial.SetTexture(_MainTex, context.Source);
-        context.UberMaterial.SetTexture(_BlurTex, rt1);
+        // context.UberMaterial.SetTexture(_MainTex, context.Source);
+        // context.UberMaterial.SetTexture(_BlurTex, rt1);
+        // use command buffer.
+        cmd.SetGlobalTexture(_MainTex, context.Source);
+        cmd.SetGlobalTexture(_BlurTex, rt1Id);
+
         // Graphics.Blit(context.Source, context.Dest, context.UberMaterial, DofShaderPass);
         // context.Swap();
 

@@ -6,7 +6,7 @@ public class PostProcessContext
     public CommandBuffer CommandBuffer { get; private set; }
     public Material UberMaterial { get; private set; }
     public RenderTargetIdentifier SourceId { get; private set; } = new RenderTargetIdentifier(BuiltinRenderTextureType.CameraTarget);
-    public RenderTargetIdentifier DestinationId { get; private set; } = new RenderTargetIdentifier(BuiltinRenderTextureType.CameraTarget);
+    public RenderTargetIdentifier DestinationId { get; set; } = new RenderTargetIdentifier(BuiltinRenderTextureType.CameraTarget);
     public int MainTexId { get; private set; } = Shader.PropertyToID("_MainTex");
     public RenderTextureDescriptor SourceDescriptor { get; set; }
 

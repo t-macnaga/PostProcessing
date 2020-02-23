@@ -25,6 +25,7 @@ public class MyPostProcess : MonoBehaviour
     CommandBuffer cmd;
     RenderTexture renderTexture;
     RenderTexture temp;
+    int tempId = Shader.PropertyToID("temp");
     RenderTexture myRenderTexture;
 
     //TODO: for specific layer mask
@@ -83,24 +84,39 @@ public class MyPostProcess : MonoBehaviour
         GetTemporaryRT();
     }
 
-    void OnPreRender()
-    {
-        camera.targetTexture = myRenderTexture;
-    }
-
     void OnPostRender()
     {
+        camera.targetTexture = myRenderTexture;
+        // }
+
+        // void OnPostRender()
+        // {
         // camera.targetTexture = null; //null means framebuffer
         Context.useOnRenderImage = true;
+        cmd.Clear();
+
+        //TODO: to property
+        // var width = targetResolutionWidth * renderScale;
+        // var height = targetResolutionHeight * renderScale;
+        // var destDesc = new RenderTextureDescriptor((int)width, (int)height);
+        // cmd.GetTemporaryRT(tempId, destDesc);// (int)width, (int)height, 16);
+
+        // temp = RenderTexture.GetTemporary((int)width, (int)height, 16);
         var source = myRenderTexture;
-        Graphics.Blit(source, temp);
+        // cmd.Blit(source, tempId);
+        // Graphics.Blit(source, temp);
         Context.Source = source;
+        // Context.DestinationId = tempId;
         Context.Dest = temp;
         profile.Render(Context);
 
-        Graphics.Blit(Context.Source, Context.Dest, Context.UberMaterial, 8);
+        // Graphics.Blit(Context.Source, Context.Dest, Context.UberMaterial, 8);
+        cmd.Blit(Context.Source, Context.Dest, Context.UberMaterial, 8);
+        // Graphics.ExecuteCommandBuffer(cmd);
+        // var dest = RenderTexture.GetTemporary(destDesc);
 
         image.texture = Context.Dest;
+        // image.texture = dest;//Context.Dest;
 
         //TODO: まっくろ。
         // Context.UberMaterial.SetPass(8);
