@@ -5,7 +5,7 @@ using UnityEngine.Rendering;
 
 namespace PostProcess
 {
-    public class ChromaticAberration : PostProcessEffect, IPostProcessComponent
+    public class ChromaticAberration : PostProcessEffect
     {
         static readonly int ShaderPass = 7;
         int _Size = Shader.PropertyToID("_ChromaticAberrationSize");
@@ -20,7 +20,7 @@ namespace PostProcess
             {
                 context.UberMaterial.EnableKeyword("CHROMATIC_ABERRATION");
                 var _MainTex = Shader.PropertyToID("_MainTex");
-                cmd.SetGlobalTexture(_MainTex, context.SourceId);
+                cmd.SetGlobalTexture(_MainTex, context.Source);//SourceId);
 
                 context.UberMaterial.SetFloat(_Size, size);
                 // cmd.Blit(context.SourceId, destId, context.UberMaterial, ShaderPass);
@@ -29,7 +29,6 @@ namespace PostProcess
             {
                 context.UberMaterial.DisableKeyword("CHROMATIC_ABERRATION");
             }
-
         }
     }
 }

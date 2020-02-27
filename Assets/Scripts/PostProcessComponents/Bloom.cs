@@ -6,7 +6,7 @@ using UnityEngine.Rendering;
 namespace PostProcess
 {
     [CreateAssetMenu()]
-    public class Bloom : PostProcessEffect, IPostProcessComponent
+    public class Bloom : PostProcessEffect
     {
         [SerializeField, Range(1, 6)] public int _iteration = 1;
         [SerializeField, Range(0.0f, 1.0f)] float _threshold = 0.0f;
@@ -55,7 +55,7 @@ namespace PostProcess
             {
                 if (width < 2 || height < 2) break;
                 currentDesc = descs[i] = new RenderTextureDescriptor(width, height);
-                pathIndex = i == 0 ? 0 : 1;
+                pathIndex = i == 0 ? Constants.BloomExtractPass : Constants.BloomBlurPass;
                 textures[i] = RenderTexture.GetTemporary(currentDesc);//, FilterMode.Bilinear);
                 context.CommandBuffer.SetGlobalTexture("_MainTex", currentSource);
                 context.CommandBuffer.Blit(currentSource, textures[i], context.UberMaterial, pathIndex);
@@ -79,7 +79,7 @@ namespace PostProcess
             context.UberMaterial.SetTexture("_BloomTex6", textures[5]);
         }
 
-        public void Release()
+        public override void Cleanup()
         {
             for (var idx = 0; idx < textures.Length; idx++)
             {

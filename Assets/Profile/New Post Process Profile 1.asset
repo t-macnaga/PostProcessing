@@ -45,7 +45,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 13e98ecd1f70d1e4582f254d7cc4faff, type: 3}
   m_Name: ChromaticAberration
   m_EditorClassIdentifier: 
-  isEnabled: 1
+  isEnabled: 0
   size: 0.0346
 --- !u!114 &11400000
 MonoBehaviour:

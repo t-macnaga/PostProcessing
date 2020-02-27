@@ -3,7 +3,7 @@ using UnityEngine.Rendering;
 
 namespace PostProcess
 {
-    public class GrayScale : PostProcessEffect, IPostProcessComponent
+    public class GrayScale : PostProcessEffect
     {
         static readonly int ShaderPass = 7;
         RenderTargetIdentifier destId = new RenderTargetIdentifier(BuiltinRenderTextureType.CameraTarget);
@@ -14,18 +14,13 @@ namespace PostProcess
             if (IsEnabled)
             {
                 context.UberMaterial.EnableKeyword("GRAYSCALE");
-
-
-
                 var _MainTex = Shader.PropertyToID("_MainTex");
-                cmd.SetGlobalTexture(_MainTex, context.SourceId);
-                // cmd.Blit(context.SourceId, destId, context.UberMaterial, ShaderPass);
+                cmd.SetGlobalTexture(_MainTex, context.Source);
             }
             else
             {
                 context.UberMaterial.DisableKeyword("GRAYSCALE");
             }
-
         }
     }
 }

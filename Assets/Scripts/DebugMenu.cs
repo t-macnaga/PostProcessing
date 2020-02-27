@@ -44,7 +44,7 @@ public class DebugMenu : MonoBehaviour
 
     public void TogglePostProcess(bool on)
     {
-        GameObject.FindObjectOfType<MyPostProcess>().enabled = on;
+        GameObject.FindObjectOfType<PostProcessCamera>().enabled = on;
     }
 
     public void ToggleAllowHDR(bool on)
@@ -75,32 +75,32 @@ public class DebugMenu : MonoBehaviour
 
     public void OnValueChanged(float scale)
     {
-        var postProcess = GameObject.FindObjectOfType<MyPostProcess>();
+        var postProcess = GameObject.FindObjectOfType<PostProcessCamera>();
         postProcess.renderScale = scale;
         postProcess.RebuildTemporaryRT();
     }
 
     public void ToggleBloom(bool on)
     {
-        var postProcess = GameObject.FindObjectOfType<MyPostProcess>();
+        var postProcess = GameObject.FindObjectOfType<PostProcessCamera>();
         postProcess.profile.GetEffect<Bloom>().IsEnabled = on;
     }
 
     public void OnValueChangeBloomIteration(float step)
     {
-        var postProcess = GameObject.FindObjectOfType<MyPostProcess>();
+        var postProcess = GameObject.FindObjectOfType<PostProcessCamera>();
         postProcess.profile.GetEffect<Bloom>()._iteration = (int)step;
     }
 
     public void ToggleDof(bool on)
     {
-        var postProcess = GameObject.FindObjectOfType<MyPostProcess>();
+        var postProcess = GameObject.FindObjectOfType<PostProcessCamera>();
         postProcess.profile.GetEffect<DepthOfField>().IsEnabled = on;
     }
 
     public void ToggleGray(bool on)
     {
-        var postProcess = GameObject.FindObjectOfType<MyPostProcess>();
+        var postProcess = GameObject.FindObjectOfType<PostProcessCamera>();
         postProcess.profile.GetEffect<GrayScale>().IsEnabled = on;
     }
 

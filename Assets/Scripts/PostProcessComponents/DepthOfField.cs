@@ -4,11 +4,10 @@ using UnityEngine.Rendering;
 namespace PostProcess
 {
     [CreateAssetMenu()]
-    public class DepthOfField : PostProcessEffect, IPostProcessComponent
+    public class DepthOfField : PostProcessEffect
     {
         [SerializeField] float depth;
         [SerializeField] float radious;
-        static readonly int GaussianBlurShaderPass = 5;
 
         int _MainTex;
         int _BlurTex;
@@ -37,13 +36,9 @@ namespace PostProcess
             context.CommandBuffer.GetTemporaryRT(rt1Id, desc);
             var cmd = context.CommandBuffer;
             // Scale Down
-            cmd.Blit(context.Source, rt1Id, context.UberMaterial, GaussianBlurShaderPass);
+            cmd.Blit(context.Source, rt1Id, context.UberMaterial, Constants.DofBlurPass);
             cmd.SetGlobalTexture(_MainTex, context.Source);
             cmd.SetGlobalTexture(_BlurTex, rt1Id);
-        }
-
-        public void Release()
-        {
         }
     }
 }
