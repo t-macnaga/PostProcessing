@@ -14,9 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   isEnabled: 1
   _iteration: 6
-  _threshold: 0.352
-  _softThreshold: 0.381
-  _intensity: 0.44
+  _threshold: 0.67
+  _softThreshold: 0.52
+  _intensity: 0.4
   _debug: 0
 --- !u!114 &-6075895494862549853
 MonoBehaviour:
@@ -30,7 +30,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a6fdc12f4932f4942bf0d0e941910fb3, type: 3}
   m_Name: DepthOfField
   m_EditorClassIdentifier: 
-  isEnabled: 1
+  isEnabled: 0
   depth: 0.02
   radious: 0.21
 --- !u!114 &-1885481035640737011
@@ -47,6 +47,21 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   isEnabled: 0
   size: 0.0346
+--- !u!114 &-202108796141493476
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1577b2fc97fb2bf4a9bae721978fd492, type: 3}
+  m_Name: Vignette
+  m_EditorClassIdentifier: 
+  isEnabled: 0
+  intensity: 44
+  smoothness: 0.25
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -62,18 +77,5 @@ MonoBehaviour:
   components:
   - {fileID: -9096135625419837008}
   - {fileID: -6075895494862549853}
-  - {fileID: 1782166464121520907}
   - {fileID: -1885481035640737011}
---- !u!114 &1782166464121520907
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6f49722c9706d24408541d9c7b428656, type: 3}
-  m_Name: GrayScale
-  m_EditorClassIdentifier: 
-  isEnabled: 0
+  - {fileID: -202108796141493476}

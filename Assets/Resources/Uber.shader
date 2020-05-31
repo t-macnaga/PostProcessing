@@ -13,6 +13,7 @@
         #pragma multi_compile __ DOF
         #pragma multi_compile __ CHROMATIC_ABERRATION
         #pragma multi_compile BLOOM_1 BLOOM_2 BLOOM_3 BLOOM_4 BLOOM_5 BLOOM_6
+        #pragma multi_compile __ VIGNETTE
         #pragma shader_feature GAUSSIAN_BLUR
             
         #include "UnityCG.cginc"
@@ -37,6 +38,10 @@
         uniform sampler2D _BlurTex;
         uniform half      _Depth;
         uniform sampler2D _CameraDepthTexture;
+
+        // Vignette
+        half _VignetteIntensity;
+        half _VignetteSmoothness;
         
         //Final Blur
         sampler2D _FinalBlurTex;
@@ -69,8 +74,8 @@
         }
 
         half getBrightness(half3 color){
-            // return Luminance(color);
-            return max(color.r, max(color.g, color.b));
+            return Luminance(color);
+            // return max(color.r, max(color.g, color.b));
         }
 
         // half4 Blur( half2 dir,v2f i)
@@ -126,8 +131,7 @@
                 // soft = soft * soft * _FilterParams.w;
                 // half contribution = max(soft, brightness - _FilterParams.x);
                 // contribution /= max(brightness, 0.00001);
-                
-                return col * brightness;// contribution;
+                return col * brightness * brightness;// contribution;
             }
 
             ENDCG
@@ -337,6 +341,7 @@
                 fixed4 color = tex2D(_MainTex,i.uv);
 
                 #ifdef CHROMATIC_ABERRATION // inspired by: https://light11.hatenadiary.com/entry/2018/06/20/000151
+                {
                     half2 uvBase = i.uv - 0.5h;
                     // R値を拡大したものに置き換える
                     half2 uvR = uvBase * (1.0h - _ChromaticAberrationSize * 2.0h) + 0.5h;
@@ -344,21 +349,39 @@
                     // G値を拡大したものに置き換える
                     half2 uvG = uvBase * (1.0h - _ChromaticAberrationSize) + 0.5h;
                     color.g = tex2D(_MainTex, uvG).g;
+                }
                 #endif
                 
                 #ifdef DOF
+                {
                     float depth = tex2D(_CameraDepthTexture, i.uv).r;
                     depth = 1.0 / (_ZBufferParams.x * depth + _ZBufferParams.y) * _Depth;
                     float blur = saturate(depth * _ProjectionParams.z);
                     color.rgb = lerp(color.rgb, tex2D(_BlurTex, i.uv).rgb, blur);
+                }
                 #endif
                 
                 #ifdef BLOOM
-                color += tex2D(_FinalBlurTex,i.uv);
+                {
+                    color += tex2D(_FinalBlurTex,i.uv);
+                }
+                #endif
+                
+                // inspired by : https://www.shadertoy.com/view/lsKSWR
+                #ifdef VIGNETTE
+                {
+                    half2 uv = i.uv;
+                    uv *=  1.0 - uv.yx;   //vec2(1.0)- uv.yx; -> 1.-u.yx; Thanks FabriceNeyret !
+                    float vig = uv.x*uv.y * _VignetteIntensity; // multiply with sth for intensity
+                    vig = pow(vig, _VignetteSmoothness );// 0.25); // change pow for modifying the extend of the  vignette
+                    color *= vig.xxxx;
+                }
                 #endif
 
                 #ifdef GRAYSCALE
-                color = Luminance(color);
+                {
+                    color = Luminance(color);
+                }
                 #endif
                 return color;
             }

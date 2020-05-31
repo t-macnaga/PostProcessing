@@ -1,13 +1,9 @@
 ﻿using UnityEngine;
-using UnityEngine.Rendering;
 
 namespace PostProcess
 {
     public class GrayScale : PostProcessEffect
     {
-        static readonly int ShaderPass = 7;
-        RenderTargetIdentifier destId = new RenderTargetIdentifier(BuiltinRenderTextureType.CameraTarget);
-
         public override void Render(PostProcessContext context)
         {
             var cmd = context.CommandBuffer;

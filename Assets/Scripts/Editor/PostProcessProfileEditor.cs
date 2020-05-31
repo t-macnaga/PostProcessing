@@ -2,6 +2,7 @@
 using UnityEngine;
 using UnityEditor;
 using System.Linq;
+using System;
 
 namespace PostProcess
 {
@@ -12,6 +13,7 @@ namespace PostProcess
         PostProcessProfile profile;
         List<Editor> postProcessEditors;
         string[] avairableEffectNames;
+        string[] avairableEffectFullNames;
         int selectedIndex;
 
         [MenuItem("CONTEXT/PostProcessEffect/Remove")]
@@ -27,6 +29,9 @@ namespace PostProcess
             RefreshEditors();
             avairableEffectNames = TypeCache.GetTypesDerivedFrom<PostProcessEffect>()
             .Select(x => x.Name).ToArray();
+
+            avairableEffectFullNames = TypeCache.GetTypesDerivedFrom<PostProcessEffect>()
+            .Select(x => x.FullName).ToArray();
         }
 
         void OnDisable()
@@ -48,13 +53,13 @@ namespace PostProcess
 
             if (GUILayout.Button("Add Effect"))
             {
-                AddEffect(avairableEffectNames[selectedIndex]);
+                AddEffect(avairableEffectFullNames[selectedIndex], avairableEffectNames[selectedIndex]);
             }
         }
 
-        void AddEffect(string name)
+        void AddEffect(string fullName, string name)
         {
-            var effect = ScriptableObject.CreateInstance(name) as PostProcessEffect;
+            var effect = ScriptableObject.CreateInstance(fullName) as PostProcessEffect;
             effect.name = name;
             AssetDatabase.AddObjectToAsset(effect, profile);
             profile.Add(effect);
@@ -88,6 +93,7 @@ namespace PostProcess
             postProcessEditors = AssetDatabase.LoadAllAssetsAtPath(AssetDatabase.GetAssetPath(profile))
             .Where(x => AssetDatabase.IsSubAsset(x))
             .Select(x => Editor.CreateEditor(x))
+            .OrderBy(x => x.target.name)
             .ToList();
         }
     }
