@@ -62,12 +62,10 @@ namespace PostProcess
         {
             // Blit to half resolution render texture
             cmd.Blit(sourceRT, halfSourceRT);
-            Context.Source = sourceRT;
+
+            Context.Source = halfSourceRT;
             Context.Dest = tempRT;
             profile.Render(Context);
-
-            // Blit Final Blur Tex
-            cmd.Blit(halfSourceRT, Context.Dest, Context.UberMaterial, Constants.BloomCombinePass);
 
             Context.UberMaterial.SetTexture("_MainTex", sourceRT);
             Context.UberMaterial.SetTexture("_FinalBlurTex", Context.Dest);
@@ -76,7 +74,6 @@ namespace PostProcess
             cmd.Blit(sourceRT, destRT, Context.UberMaterial, Constants.BlitFinalPass);
 
             image.texture = destRT;
-
             profile.Cleanup();
         }
 

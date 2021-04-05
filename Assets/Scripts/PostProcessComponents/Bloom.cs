@@ -8,7 +8,7 @@ namespace PostProcess
         [SerializeField, Range(1, 6)] public int _iteration = 1;
         [SerializeField, Range(0.0f, 1.0f)] float _threshold = 0.0f;
         [SerializeField, Range(0.0f, 1.0f)] float _softThreshold = 0.0f;
-        [SerializeField, Range(0.0f, 10.0f)] float _intensity = 1.0f;
+        [SerializeField, Range(0.0f, 50.0f)] float _intensity = 1.0f;
         [SerializeField] bool _debug;
 
         RenderTexture[] textures = new RenderTexture[30];
@@ -28,7 +28,7 @@ namespace PostProcess
             }
             context.UberMaterial.EnableKeyword("BLOOM");
 
-            var sourceDesc = new RenderTextureDescriptor(context.Source.width / 4, context.Source.height / 4);
+            var sourceDesc = new RenderTextureDescriptor(context.Source.width / 2, context.Source.height / 2);
             var currentSource = context.Source;
             var filterParams = Vector4.zero;
             var knee = _threshold * _softThreshold;
@@ -47,6 +47,7 @@ namespace PostProcess
             var i = 0;
             RenderTextureDescriptor currentDesc;
 
+            context.CommandBuffer.BeginSample("Bloom");
             // Down Sample
             for (; i < _iteration; i++)
             {
@@ -74,6 +75,8 @@ namespace PostProcess
             context.UberMaterial.SetTexture("_BloomTex4", textures[3]);
             context.UberMaterial.SetTexture("_BloomTex5", textures[4]);
             context.UberMaterial.SetTexture("_BloomTex6", textures[5]);
+            context.CommandBuffer.Blit(context.Source, context.Dest, context.UberMaterial, Constants.BloomCombinePass);
+            context.CommandBuffer.EndSample("Bloom");
         }
 
         public override void Cleanup()

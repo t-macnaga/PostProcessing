@@ -18,22 +18,22 @@ MonoBehaviour:
     value: 1
   intensity:
     overrideState: 1
-    value: 1.68
+    value: 3
   threshold:
     overrideState: 1
-    value: 0.32
+    value: 0.69
   softKnee:
-    overrideState: 0
+    overrideState: 1
     value: 1
   clamp:
-    overrideState: 0
-    value: 65471.54
+    overrideState: 1
+    value: 65475.7
   diffusion:
-    overrideState: 0
-    value: 10
+    overrideState: 1
+    value: 5.58
   anamorphicRatio:
     overrideState: 0
-    value: 0
+    value: 1
   color:
     overrideState: 0
     value: {r: 1, g: 1, b: 1, a: 1}
@@ -74,7 +74,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 556797029e73b2347956b6579e77e05b, type: 3}
   m_Name: DepthOfField
   m_EditorClassIdentifier: 
-  active: 1
+  active: 0
   enabled:
     overrideState: 1
     value: 1

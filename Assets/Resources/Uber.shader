@@ -8,13 +8,13 @@
         CGINCLUDE
         #pragma vertex vert
         #pragma fragment frag
-        #pragma multi_compile __ GRAYSCALE
+        // #pragma multi_compile __ GRAYSCALE
         #pragma multi_compile __ BLOOM
         #pragma multi_compile __ DOF
         #pragma multi_compile __ CHROMATIC_ABERRATION
         #pragma multi_compile BLOOM_1 BLOOM_2 BLOOM_3 BLOOM_4 BLOOM_5 BLOOM_6
-        #pragma multi_compile __ VIGNETTE
-        #pragma shader_feature GAUSSIAN_BLUR
+        // #pragma multi_compile __ VIGNETTE
+        // #pragma shader_feature GAUSSIAN_BLUR
             
         #include "UnityCG.cginc"
 
@@ -124,14 +124,37 @@
                 half4 col = 1;
                 // col.rgb = sampleBox(i.uv, 1.0);
                 col = tex2D(_MainTex, i.uv);
+                
+                #if UNITY_COLORSPACE_GAMMA
+                col.rgb = GammaToLinearSpace(col.rgb);
+                #endif
+
+                // Depthで色変えたりとか。。
+                //     float depth = tex2D(_CameraDepthTexture, i.uv).r;
+                //     depth = 1.0 / (_ZBufferParams.x * depth + _ZBufferParams.y) * _Depth;
+                //     float blur = saturate(depth * _ProjectionParams.z);
+                // col *= blur;
+
                 half brightness = getBrightness(col.rgb);
 
-                // half soft = brightness - _FilterParams.y;
-                // soft = clamp(soft, 0, _FilterParams.z);
-                // soft = soft * soft * _FilterParams.w;
-                // half contribution = max(soft, brightness - _FilterParams.x);
-                // contribution /= max(brightness, 0.00001);
-                return col * brightness * brightness;// contribution;
+                half soft = brightness - _FilterParams.y;
+                soft = clamp(soft, 0, _FilterParams.z);
+                soft = soft * soft * _FilterParams.w;
+                half contribution = max(soft, brightness - _FilterParams.x);
+                contribution /= max(brightness, 0.00001);
+                
+                col.a = getBrightness(col.rgb);
+                // 白飛びを防ぐ
+                col.rgb = max(col.rgb - _FilterParams.x, 0);
+
+                 col *= contribution;
+                #if UNITY_COLORSPACE_GAMMA
+                col.rgb = LinearToGammaSpace(col.rgb);
+                #endif
+
+                return col;
+                // return col *contribution;
+                // return col * brightness;// * brightness;// contribution;
             }
 
             ENDCG
@@ -302,21 +325,25 @@
                     half4 bloom =tex2D(_BloomTex1, i.uv);
                     #ifdef BLOOM_2
                     bloom.rgb += tex2D(_BloomTex2, i.uv).rgb;
+                    bloom.rgb /=2;
                     #endif
                     #ifdef BLOOM_3
                     bloom.rgb += tex2D(_BloomTex2, i.uv).rgb;
                     bloom.rgb += tex2D(_BloomTex3, i.uv).rgb;
+                    bloom.rgb /=3;
                     #endif
                     #ifdef BLOOM_4
                     bloom.rgb += tex2D(_BloomTex2, i.uv).rgb;
                     bloom.rgb += tex2D(_BloomTex3, i.uv).rgb;
                     bloom.rgb += tex2D(_BloomTex4, i.uv).rgb;
+                    bloom.rgb /=4;
                     #endif
                     #ifdef BLOOM_5
                     bloom.rgb += tex2D(_BloomTex2, i.uv).rgb;
                     bloom.rgb += tex2D(_BloomTex3, i.uv).rgb;
                     bloom.rgb += tex2D(_BloomTex4, i.uv).rgb;
                     bloom.rgb += tex2D(_BloomTex5, i.uv).rgb;
+                    bloom.rgb /=5;
                     #endif
                     #ifdef BLOOM_6
                     bloom.rgb += tex2D(_BloomTex2, i.uv).rgb;
@@ -324,6 +351,7 @@
                     bloom.rgb += tex2D(_BloomTex4, i.uv).rgb;
                     bloom.rgb += tex2D(_BloomTex5, i.uv).rgb;
                     bloom.rgb += tex2D(_BloomTex6, i.uv).rgb;
+                    bloom.rgb /=6;
                     #endif
                     bloom.rgb *= _Intensity;
                     finalColor += bloom;
@@ -340,6 +368,15 @@
             fixed4 frag(v2f i) : SV_TARGET{
                 fixed4 color = tex2D(_MainTex,i.uv);
 
+                #ifdef DOF
+                {
+                    float depth = tex2D(_CameraDepthTexture, i.uv).r;
+                    depth = 1.0 / (_ZBufferParams.x * depth + _ZBufferParams.y) * _Depth;
+                    float blur = saturate(depth * _ProjectionParams.z);
+                    color.rgb = lerp(color.rgb, tex2D(_BlurTex, i.uv).rgb, blur);
+                }
+                #endif
+                
                 #ifdef CHROMATIC_ABERRATION // inspired by: https://light11.hatenadiary.com/entry/2018/06/20/000151
                 {
                     half2 uvBase = i.uv - 0.5h;
@@ -351,22 +388,25 @@
                     color.g = tex2D(_MainTex, uvG).g;
                 }
                 #endif
-                
-                #ifdef DOF
+
+                #if UNITY_COLORSPACE_GAMMA
                 {
-                    float depth = tex2D(_CameraDepthTexture, i.uv).r;
-                    depth = 1.0 / (_ZBufferParams.x * depth + _ZBufferParams.y) * _Depth;
-                    float blur = saturate(depth * _ProjectionParams.z);
-                    color.rgb = lerp(color.rgb, tex2D(_BlurTex, i.uv).rgb, blur);
+                    color.rgb = GammaToLinearSpace(color.rgb);
                 }
                 #endif
-                
+
                 #ifdef BLOOM
                 {
                     color += tex2D(_FinalBlurTex,i.uv);
                 }
                 #endif
                 
+                #if UNITY_COLORSPACE_GAMMA
+                {
+                    color.rgb = LinearToGammaSpace(color.rgb);
+                }
+                #endif
+
                 // inspired by : https://www.shadertoy.com/view/lsKSWR
                 #ifdef VIGNETTE
                 {
