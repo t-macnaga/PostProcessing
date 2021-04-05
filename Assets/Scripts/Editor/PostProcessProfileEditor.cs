@@ -6,12 +6,49 @@ using System;
 
 namespace PostProcess
 {
+    public class EffectEditor
+    {
+        bool foldout;
+        PostProcessProfileEditor profileEditor;
+        Editor editor;
+        public string Name => editor.target.name;
+        public EffectEditor(Editor editor, PostProcessProfileEditor profileEditor)
+        {
+            this.editor = editor;
+            this.profileEditor = profileEditor;
+        }
+
+        public void GUI()
+        {
+            foldout = EditorGUILayout.BeginFoldoutHeaderGroup(foldout, Name);
+            var rect = GUILayoutUtility.GetLastRect();
+            if (rect.Contains(Event.current.mousePosition) && Event.current.type == EventType.ContextClick)
+            {
+                // Stuff I wanna do
+                var menu = new GenericMenu();
+                menu.AddItem(new GUIContent("Remove", "Removes the Effect from Profile."), false,
+                () =>
+                {
+                    profileEditor.RemoveEffect(Name);
+                });
+                menu.DropDown(rect);
+            }
+            if (foldout)
+            {
+                EditorGUILayout.BeginVertical("box");
+                editor.OnInspectorGUI();
+                EditorGUILayout.EndVertical();
+            }
+            EditorGUILayout.EndFoldoutHeaderGroup();
+        }
+    }
+
     [CustomEditor(typeof(PostProcessProfile))]
     public class PostProcessProfileEditor : Editor
     {
         static PostProcessProfileEditor profileEditorInstance;
         PostProcessProfile profile;
-        List<Editor> postProcessEditors;
+        List<EffectEditor> postProcessEditors;
         string[] avairableEffectNames;
         string[] avairableEffectFullNames;
         int selectedIndex;
@@ -43,10 +80,9 @@ namespace PostProcess
         {
             foreach (var editor in postProcessEditors)
             {
-                editor.DrawHeader();
-                EditorGUILayout.BeginVertical("box");
-                editor.OnInspectorGUI();
-                EditorGUILayout.EndVertical();
+                // editor.DrawHeader();
+                // EditorGUILayout.BeginFoldoutHeaderGroup(true, editor.name);
+                editor.GUI();
             }
 
             selectedIndex = EditorGUILayout.Popup(selectedIndex, avairableEffectNames);
@@ -67,7 +103,7 @@ namespace PostProcess
             RefreshEditors();
         }
 
-        void RemoveEffect(string name)
+        public void RemoveEffect(string name)
         {
             var assets = AssetDatabase.LoadAllAssetsAtPath(AssetDatabase.GetAssetPath(profile));
             for (var i = 0; i < assets.Length; i++)
@@ -92,8 +128,8 @@ namespace PostProcess
         {
             postProcessEditors = AssetDatabase.LoadAllAssetsAtPath(AssetDatabase.GetAssetPath(profile))
             .Where(x => AssetDatabase.IsSubAsset(x))
-            .Select(x => Editor.CreateEditor(x))
-            .OrderBy(x => x.target.name)
+            .Select(x => new EffectEditor(Editor.CreateEditor(x), this))
+            .OrderBy(x => x.Name)
             .ToList();
         }
     }
