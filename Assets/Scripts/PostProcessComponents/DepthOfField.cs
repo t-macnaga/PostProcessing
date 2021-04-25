@@ -31,7 +31,7 @@ namespace PostProcess
             context.UberMaterial.EnableKeyword("DOF");
             context.UberMaterial.SetFloat(_Depth, depth);
             context.UberMaterial.SetFloat(_Radius, radious);
-            var desc = new RenderTextureDescriptor(context.Source.width / 2, context.Source.height / 2);
+            var desc = new RenderTextureDescriptor(context.Source.width, context.Source.height);
             context.CommandBuffer.GetTemporaryRT(rt1Id, desc);
             var cmd = context.CommandBuffer;
             // Scale Down

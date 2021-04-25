@@ -26,11 +26,11 @@ namespace PostProcess
             }
         }
 
-        public void Cleanup()
+        public void FrameCleanup()
         {
             foreach (var component in components)
             {
-                component.Cleanup();
+                component.FrameCleanup();
             }
         }
 

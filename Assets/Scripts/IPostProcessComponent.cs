@@ -4,6 +4,6 @@
     {
         bool IsEnabled { get; set; }
         void Render(PostProcessContext context);
-        void Cleanup();
+        void FrameCleanup();
     }
 }

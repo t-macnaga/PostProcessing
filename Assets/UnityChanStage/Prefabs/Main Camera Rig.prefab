@@ -135,7 +135,7 @@ Camera:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 100006}
-  m_Enabled: 1
+  m_Enabled: 0
   serializedVersion: 2
   m_ClearFlags: 2
   m_BackGroundColor: {r: 0, g: 0, b: 0, a: 0.019607844}
@@ -156,7 +156,7 @@ Camera:
   field of view: 24
   orthographic: 0
   orthographic size: 5
-  m_Depth: -1
+  m_Depth: 0
   m_CullingMask:
     serializedVersion: 2
     m_Bits: 4294967295
@@ -221,12 +221,25 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   profile: {fileID: 11400000, guid: 5f9d2c7bd1eb5064989fad57d5df7e7d, type: 2}
   renderScale: 1
-  image: {fileID: 3811219499142786916}
-  targetResolutionWidth: 856
-  targetResolutionHeight: 480
-  mobileModeGaussianBlur: 0
-  gaussianBlur: 0
-  gaussianBlurMaterial: {fileID: 0}
+  downSampler: 1
+  onPostRender:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 68808398178793147}
+        m_MethodName: PostRender
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+  targetResolutionWidth: 1334
+  targetResolutionHeight: 750
+  isRenderManual: 1
+  isHalfRender: 0
 --- !u!1 &100008
 GameObject:
   m_ObjectHideFlags: 0
@@ -1138,6 +1151,7 @@ GameObject:
   - component: {fileID: 4441569906962253630}
   - component: {fileID: 4796444505998186721}
   - component: {fileID: 3811219499142786916}
+  - component: {fileID: 68808398178793147}
   m_Layer: 5
   m_Name: RawImage
   m_TagString: Untagged
@@ -1187,6 +1201,7 @@ MonoBehaviour:
   m_Material: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 1
+  m_Maskable: 1
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
@@ -1197,3 +1212,17 @@ MonoBehaviour:
     y: 0
     width: 1
     height: 1
+--- !u!114 &68808398178793147
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7069702408466358265}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3f5c06730034c3d43989e15594455c1c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  image: {fileID: 3811219499142786916}
+  postProcessing: {fileID: 6260038846308637930}

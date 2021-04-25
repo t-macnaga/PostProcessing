@@ -12,7 +12,7 @@
         #pragma multi_compile __ BLOOM
         #pragma multi_compile __ DOF
         #pragma multi_compile __ CHROMATIC_ABERRATION
-        #pragma multi_compile BLOOM_1 BLOOM_2 BLOOM_3 BLOOM_4 BLOOM_5 BLOOM_6
+        #pragma multi_compile BLOOM_LQ BLOOM_HQ
         // #pragma multi_compile __ VIGNETTE
         // #pragma shader_feature GAUSSIAN_BLUR
             
@@ -78,22 +78,22 @@
             // return max(color.r, max(color.g, color.b));
         }
 
-        // half4 Blur( half2 dir,v2f i)
-        // {
-        //     half4 color = tex2D(_MainTex, i.uv);
-        //     float weights[5] = { 0.22702702702, 0.19459459459, 0.12162162162, 0.05405405405, 0.01621621621 };
-        //     float2 offset = dir * _MainTex_TexelSize.xy * 3;//_Radius;
-        //     color.rgb *= weights[0];
-        //     color.rgb += tex2D(_MainTex, i.uv + offset      ).rgb * weights[1];
-        //     color.rgb += tex2D(_MainTex, i.uv - offset      ).rgb * weights[1];
-        //     color.rgb += tex2D(_MainTex, i.uv + offset * 2.0).rgb * weights[2];
-        //     color.rgb += tex2D(_MainTex, i.uv - offset * 2.0).rgb * weights[2];
-        //     color.rgb += tex2D(_MainTex, i.uv + offset * 3.0).rgb * weights[3];
-        //     color.rgb += tex2D(_MainTex, i.uv - offset * 3.0).rgb * weights[3];
-        //     color.rgb += tex2D(_MainTex, i.uv + offset * 4.0).rgb * weights[4];
-        //     color.rgb += tex2D(_MainTex, i.uv - offset * 4.0).rgb * weights[4];
-        //     return color;
-        // }
+        half4 Blur( half2 dir,v2f i)
+        {
+            half4 color = tex2D(_MainTex, i.uv);
+            float weights[5] = { 0.22702702702, 0.19459459459, 0.12162162162, 0.05405405405, 0.01621621621 };
+            float2 offset = dir * _MainTex_TexelSize.xy * 3;//_Radius;
+            color.rgb *= weights[0];
+            color.rgb += tex2D(_MainTex, i.uv + offset      ).rgb * weights[1];
+            color.rgb += tex2D(_MainTex, i.uv - offset      ).rgb * weights[1];
+            color.rgb += tex2D(_MainTex, i.uv + offset * 2.0).rgb * weights[2];
+            color.rgb += tex2D(_MainTex, i.uv - offset * 2.0).rgb * weights[2];
+            color.rgb += tex2D(_MainTex, i.uv + offset * 3.0).rgb * weights[3];
+            color.rgb += tex2D(_MainTex, i.uv - offset * 3.0).rgb * weights[3];
+            color.rgb += tex2D(_MainTex, i.uv + offset * 4.0).rgb * weights[4];
+            color.rgb += tex2D(_MainTex, i.uv - offset * 4.0).rgb * weights[4];
+            return color;
+        }
 
         v2f vert (appdata v)
         {
@@ -122,7 +122,6 @@
                 // 色抽出にソフトニーを適用
 
                 half4 col = 1;
-                // col.rgb = sampleBox(i.uv, 1.0);
                 col = tex2D(_MainTex, i.uv);
                 
                 #if UNITY_COLORSPACE_GAMMA
@@ -135,26 +134,23 @@
                 //     float blur = saturate(depth * _ProjectionParams.z);
                 // col *= blur;
 
-                half brightness = getBrightness(col.rgb);
-
-                half soft = brightness - _FilterParams.y;
-                soft = clamp(soft, 0, _FilterParams.z);
-                soft = soft * soft * _FilterParams.w;
-                half contribution = max(soft, brightness - _FilterParams.x);
-                contribution /= max(brightness, 0.00001);
+                // half brightness = getBrightness(col.rgb);
+                // half soft = brightness - _FilterParams.y;
+                // soft = clamp(soft, 0, _FilterParams.z);
+                // soft = soft * soft * _FilterParams.w;
+                // half contribution = max(soft, brightness - _FilterParams.x);
+                // contribution /= max(brightness, 0.00001);
                 
                 col.a = getBrightness(col.rgb);
                 // 白飛びを防ぐ
                 col.rgb = max(col.rgb - _FilterParams.x, 0);
 
-                 col *= contribution;
+                //  col *= contribution;
                 #if UNITY_COLORSPACE_GAMMA
                 col.rgb = LinearToGammaSpace(col.rgb);
                 #endif
 
                 return col;
-                // return col *contribution;
-                // return col * brightness;// * brightness;// contribution;
             }
 
             ENDCG
@@ -171,7 +167,6 @@
                 // col.rgb = Blur(half2(1,0),i);
                 // col.rgb += Blur(half2(0,1),i);
                 // col.rgb /= 2;
-                // col.r
                 col.rgb = sampleBox(i.uv, 1.0);
                 return col;
             }
@@ -179,64 +174,8 @@
             ENDCG
         }
 
-        // 2: アップサンプリング用のパス
-        Pass
-        {
-            Blend One One
-
-            CGPROGRAM
-
-            fixed4 frag (v2f i) : SV_Target
-            {
-                half4 col = 1;
-                col.rgb = sampleBox(i.uv, 1);
-                return col;
-            }
-
-            ENDCG
-        }
-
-        // 3: 最後の一回のアップサンプリング用のパス
-        Pass
-        {
-            CGPROGRAM
-
-            fixed4 frag (v2f i) : SV_Target
-            {
-                half4 col = tex2D(_SourceTex, i.uv);
-                
-                half4 bloom =tex2D(_BloomTex1, i.uv);//.rgb;
-                bloom.rgb += tex2D(_BloomTex2, i.uv).rgb;
-                bloom.rgb += tex2D(_BloomTex3, i.uv).rgb;
-                // col.rgb += tex2D(_BloomTex4, i.uv).rgb;
-                // col.rgb += tex2D(_BloomTex5, i.uv).rgb;
-                // col.rgb += tex2D(_BloomTex6, i.uv).rgb;
-                bloom.rgb *= _Intensity;
-                // col.rgb += sampleBox(i.uv, 1) * _Intensity;
-                return col + bloom;
-            }
-
-            ENDCG
-        }
-
-        // 4: デバッグ用
-        Pass
-        {
-            CGPROGRAM
-
-            fixed4 frag (v2f i) : SV_Target
-            {
-                half4 col = 1;
-                col.rgb = sampleBox(i.uv, 0.5) * _Intensity;
-                return col;
-            }
-
-            ENDCG
-        }
-      
-
-            Cull Off ZWrite Off ZTest Always
-        // 5: Gaussian Blur
+        Cull Off ZWrite Off ZTest Always
+        // 2: Gaussian Blur
         Pass {
             CGPROGRAM
             // #pragma vertex vert
@@ -258,6 +197,7 @@
                 color.rgb *= 0.5;
 
                 // // Gaussian Blur
+                // half4 color = tex2D(_MainTex, i.uv);
                 // float weights[5] = { 0.22702702702, 0.19459459459, 0.12162162162, 0.05405405405, 0.01621621621 };
                 // float2 offset = _Direction * _MainTex_TexelSize.xy * _Radius;
                 // color.rgb *= weights[0];
@@ -275,47 +215,7 @@
             ENDCG
         }
 
-            // 6: DOF
-        Pass {
-            CGPROGRAM
-            // #pragma vertex vert
-            // #pragma fragment frag
-
-            // Properties
-            // uniform sampler2D _MainTex;
-            // uniform sampler2D _BlurTex;
-            // uniform half      _Depth;
-            // uniform sampler2D _CameraDepthTexture;
-
-            //------------------------------------------------------------------------
-            // Fragment Shader
-            //------------------------------------------------------------------------
-            fixed4 frag(v2f i) : SV_Target {
-                fixed4 color = tex2D(_MainTex, i.uv);
-
-                // DOF
-                float depth = tex2D(_CameraDepthTexture, i.uv).r;
-                depth = 1.0 / (_ZBufferParams.x * depth + _ZBufferParams.y) * _Depth;
-                float blur = saturate(depth * _ProjectionParams.z);
-                color.rgb = lerp(color.rgb, tex2D(_BlurTex, i.uv).rgb, blur);
-
-                return color;
-            }
-            ENDCG
-        }
-        
-        // 7 : grayscale
-        Pass {
-            CGPROGRAM
-
-            fixed4 frag(v2f i) : SV_Target {
-                fixed4 color = tex2D(_MainTex, i.uv);
-                return Luminance(color);
-            }
-            ENDCG
-        }
-
-        // 8 :Uber.
+        // 3 : BloomCombine
         Pass {
             CGPROGRAM
         
@@ -323,29 +223,12 @@
                 fixed4 finalColor = 0;
                 #ifdef BLOOM
                     half4 bloom =tex2D(_BloomTex1, i.uv);
-                    #ifdef BLOOM_2
-                    bloom.rgb += tex2D(_BloomTex2, i.uv).rgb;
-                    bloom.rgb /=2;
-                    #endif
-                    #ifdef BLOOM_3
+                    #ifdef BLOOM_LQ
                     bloom.rgb += tex2D(_BloomTex2, i.uv).rgb;
                     bloom.rgb += tex2D(_BloomTex3, i.uv).rgb;
                     bloom.rgb /=3;
                     #endif
-                    #ifdef BLOOM_4
-                    bloom.rgb += tex2D(_BloomTex2, i.uv).rgb;
-                    bloom.rgb += tex2D(_BloomTex3, i.uv).rgb;
-                    bloom.rgb += tex2D(_BloomTex4, i.uv).rgb;
-                    bloom.rgb /=4;
-                    #endif
-                    #ifdef BLOOM_5
-                    bloom.rgb += tex2D(_BloomTex2, i.uv).rgb;
-                    bloom.rgb += tex2D(_BloomTex3, i.uv).rgb;
-                    bloom.rgb += tex2D(_BloomTex4, i.uv).rgb;
-                    bloom.rgb += tex2D(_BloomTex5, i.uv).rgb;
-                    bloom.rgb /=5;
-                    #endif
-                    #ifdef BLOOM_6
+                    #ifdef BLOOM_HQ
                     bloom.rgb += tex2D(_BloomTex2, i.uv).rgb;
                     bloom.rgb += tex2D(_BloomTex3, i.uv).rgb;
                     bloom.rgb += tex2D(_BloomTex4, i.uv).rgb;
@@ -361,7 +244,7 @@
             ENDCG
         }
 
-        // 9: Final
+        // 4: Final
         Pass {
 
             CGPROGRAM

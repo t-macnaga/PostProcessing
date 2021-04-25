@@ -8,10 +8,10 @@ EditorBuildSettings:
   - enabled: 0
     path: Assets/StagePPSv2.unity
     guid: b1ed765242d0bbc4facce0829e68310c
-  - enabled: 1
+  - enabled: 0
     path: Assets/Stage.unity
     guid: 4b4444cf84f908b48b54f3b18478f963
-  - enabled: 0
+  - enabled: 1
     path: Assets/Scenes/Main.unity
     guid: eac708282bd3644f08ee300328f7e486
   - enabled: 0

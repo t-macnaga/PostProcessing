@@ -5,19 +5,15 @@ namespace PostProcess
     [CreateAssetMenu()]
     public class Bloom : PostProcessEffect
     {
-        [SerializeField, Range(1, 6)] public int _iteration = 1;
+        // [SerializeField, Range(1, 6)] public int _iteration = 1;
         [SerializeField, Range(0.0f, 1.0f)] float _threshold = 0.0f;
         [SerializeField, Range(0.0f, 1.0f)] float _softThreshold = 0.0f;
         [SerializeField, Range(0.0f, 50.0f)] float _intensity = 1.0f;
+        [SerializeField] bool bloomHQ = true;
         [SerializeField] bool _debug;
 
-        RenderTexture[] textures = new RenderTexture[30];
-        RenderTextureDescriptor[] descs = new RenderTextureDescriptor[30];
-
-        string[] bloomTexKeywords = new string[]
-        {
-            "BLOOM_1","BLOOM_2","BLOOM_3","BLOOM_4","BLOOM_5","BLOOM_6"
-        };
+        RenderTexture[] textures = new RenderTexture[6];
+        RenderTextureDescriptor[] descs = new RenderTextureDescriptor[6];
 
         public override void Render(PostProcessContext context)
         {
@@ -28,7 +24,7 @@ namespace PostProcess
             }
             context.UberMaterial.EnableKeyword("BLOOM");
 
-            var sourceDesc = new RenderTextureDescriptor(context.Source.width / 2, context.Source.height / 2);
+            var sourceDesc = new RenderTextureDescriptor(context.Source.width, context.Source.height);
             var currentSource = context.Source;
             var filterParams = Vector4.zero;
             var knee = _threshold * _softThreshold;
@@ -48,13 +44,15 @@ namespace PostProcess
             RenderTextureDescriptor currentDesc;
 
             context.CommandBuffer.BeginSample("Bloom");
+
+            var iterations = bloomHQ ? 6 : 3;
             // Down Sample
-            for (; i < _iteration; i++)
+            for (; i < iterations; i++)
             {
                 if (width < 2 || height < 2) break;
                 currentDesc = descs[i] = new RenderTextureDescriptor(width, height);
                 pathIndex = i == 0 ? Constants.BloomExtractPass : Constants.BloomBlurPass;
-                textures[i] = RenderTexture.GetTemporary(currentDesc);//, FilterMode.Bilinear);
+                textures[i] = RenderTexture.GetTemporary(currentDesc);
                 context.CommandBuffer.SetGlobalTexture("_MainTex", currentSource);
                 context.CommandBuffer.Blit(currentSource, textures[i], context.UberMaterial, pathIndex);
                 currentSource = textures[i];
@@ -62,24 +60,27 @@ namespace PostProcess
                 height /= 2;
             }
 
-            for (var idx = 0; idx < 6; idx++)
-            {
-                context.UberMaterial.DisableKeyword(bloomTexKeywords[idx]);
-            }
-
-            context.UberMaterial.EnableKeyword(bloomTexKeywords[_iteration - 1]);
-
             context.UberMaterial.SetTexture("_BloomTex1", textures[0]);
             context.UberMaterial.SetTexture("_BloomTex2", textures[1]);
             context.UberMaterial.SetTexture("_BloomTex3", textures[2]);
-            context.UberMaterial.SetTexture("_BloomTex4", textures[3]);
-            context.UberMaterial.SetTexture("_BloomTex5", textures[4]);
-            context.UberMaterial.SetTexture("_BloomTex6", textures[5]);
+            if (bloomHQ)
+            {
+                context.UberMaterial.EnableKeyword("BLOOM_HQ");
+                context.UberMaterial.DisableKeyword("BLOOM_LQ");
+                context.UberMaterial.SetTexture("_BloomTex4", textures[3]);
+                context.UberMaterial.SetTexture("_BloomTex5", textures[4]);
+                context.UberMaterial.SetTexture("_BloomTex6", textures[5]);
+            }
+            else
+            {
+                context.UberMaterial.EnableKeyword("BLOOM_LQ");
+                context.UberMaterial.DisableKeyword("BLOOM_HQ");
+            }
             context.CommandBuffer.Blit(context.Source, context.Dest, context.UberMaterial, Constants.BloomCombinePass);
             context.CommandBuffer.EndSample("Bloom");
         }
 
-        public override void Cleanup()
+        public override void FrameCleanup()
         {
             for (var idx = 0; idx < textures.Length; idx++)
             {

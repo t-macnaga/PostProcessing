@@ -77,7 +77,7 @@ public class DebugMenu : MonoBehaviour
     {
         var postProcess = GameObject.FindObjectOfType<PostProcessCamera>();
         postProcess.renderScale = scale;
-        postProcess.RebuildTemporaryRT();
+        postProcess.RebuildRT();
     }
 
     public void ToggleBloom(bool on)
@@ -89,7 +89,8 @@ public class DebugMenu : MonoBehaviour
     public void OnValueChangeBloomIteration(float step)
     {
         var postProcess = GameObject.FindObjectOfType<PostProcessCamera>();
-        postProcess.profile.GetEffect<Bloom>()._iteration = (int)step;
+        // postProcess.profile.GetEffect<Bloom>()._iteration = (int)step;
+        //TODO:
     }
 
     public void ToggleDof(bool on)

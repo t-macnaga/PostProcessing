@@ -1,24 +1,35 @@
 ﻿using UnityEngine;
 using UnityEngine.Rendering;
+using UnityEngine.Events;
 
 namespace PostProcess
 {
     [ExecuteAlways]
+    [RequireComponent(typeof(Camera))]
     public class PostProcessCamera : MonoBehaviour
     {
         public PostProcessProfile profile;
         public float renderScale = 1f;
-        public UnityEngine.UI.RawImage image;
+        public float downSampler = 1f;
+        public UnityEvent onPostRender = new UnityEvent();
         public int targetResolutionWidth = 856;
         public int targetResolutionHeight = 480;
-        PostProcessContext Context;
+        public bool isRenderManual;
+        public bool isHalfRender;
+        int counter;
+        public PostProcessContext Context { get; private set; }
         CommandBuffer cmd;
-        RenderTexture sourceRT;
-        RenderTexture tempRT;
-        RenderTexture halfSourceRT;
-        RenderTexture destRT;
-        Material material;
         Camera camera;
+        public int Width => (int)(targetResolutionWidth * renderScale);
+        public int Height => (int)(targetResolutionHeight * renderScale);
+
+#if UNITY_EDITOR
+        void OnValidate()
+        {
+            if (Context == null) return;
+            RebuildRT();
+        }
+#endif
 
         void Awake()
         {
@@ -26,79 +37,53 @@ namespace PostProcess
             camera.depthTextureMode |= DepthTextureMode.Depth;
         }
 
+        void Update()
+        {
+            if (isRenderManual)
+            {
+                if (isHalfRender)
+                {
+                    counter++;
+                    if (counter % 2 == 0) return;
+                }
+                camera.enabled = false;
+                camera.Render();
+            }
+        }
+
         void OnEnable()
         {
-            material = new Material(Shader.Find("Hidden/PostEffect/Uber"));
-            material.hideFlags = HideFlags.HideAndDontSave;
             cmd = new CommandBuffer();
-            Context = new PostProcessContext(cmd, material);
+            Context = new PostProcessContext(cmd);
+            Context.Profile = profile;
+            Context.Camera = camera;
             camera.AddCommandBuffer(CameraEvent.BeforeImageEffects, cmd);
-            GetTemporaryRT();
+            Context.GetTemporaryRT(Width, Height);
         }
 
         void OnDisable()
         {
+            Context.Cleanup();
             camera.RemoveCommandBuffer(CameraEvent.BeforeImageEffects, cmd);
-
             camera.targetTexture = null;
-            ReleaseTemporaryRT();
-            DestroyImmediate(material);
+            Context.ReleaseTemporaryRT();
         }
-
-#if UNITY_EDITOR
-        void OnValidate()
-        {
-            RebuildTemporaryRT();
-        }
-#endif
 
         void OnPreRender()
         {
-            camera.targetTexture = sourceRT;
+            camera.targetTexture = Context.sourceRT;
             cmd.Clear();
         }
 
         void OnPostRender()
         {
-            // Blit to half resolution render texture
-            cmd.Blit(sourceRT, halfSourceRT);
-
-            Context.Source = halfSourceRT;
-            Context.Dest = tempRT;
-            profile.Render(Context);
-
-            Context.UberMaterial.SetTexture("_MainTex", sourceRT);
-            Context.UberMaterial.SetTexture("_FinalBlurTex", Context.Dest);
-
-            // Blit final pass
-            cmd.Blit(sourceRT, destRT, Context.UberMaterial, Constants.BlitFinalPass);
-
-            image.texture = destRT;
-            profile.Cleanup();
+            Context.OnPostRender();
+            onPostRender?.Invoke();
         }
 
-        public void RebuildTemporaryRT()
+        public void RebuildRT()
         {
-            ReleaseTemporaryRT();
-            GetTemporaryRT();
-        }
-
-        void GetTemporaryRT()
-        {
-            var width = targetResolutionWidth * renderScale;
-            var height = targetResolutionHeight * renderScale;
-            sourceRT = RenderTexture.GetTemporary((int)width, (int)height, 16);
-            destRT = RenderTexture.GetTemporary((int)width, (int)height, 16);
-            tempRT = RenderTexture.GetTemporary((int)width / 2, (int)height / 2, 16);
-            halfSourceRT = RenderTexture.GetTemporary((int)width / 2, (int)height / 2, 16);
-        }
-
-        void ReleaseTemporaryRT()
-        {
-            RenderTexture.ReleaseTemporary(halfSourceRT);
-            RenderTexture.ReleaseTemporary(tempRT);
-            RenderTexture.ReleaseTemporary(destRT);
-            RenderTexture.ReleaseTemporary(sourceRT);
+            Context.RebuildTemporaryRT(Width, Height);
         }
     }
 }
