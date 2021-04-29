@@ -18,7 +18,7 @@ public class DebugMenu : MonoBehaviour
     {
         QualitySettings.vSyncCount = 0;
         Application.targetFrameRate = 60;
-        DontDestroyOnLoad(this.gameObject);
+        // DontDestroyOnLoad(this.gameObject);
     }
 
     void Update()
@@ -71,6 +71,11 @@ public class DebugMenu : MonoBehaviour
     public void LoadStage()
     {
         SceneManager.LoadScene("Stage");
+    }
+
+    public void LoadStagePPSv2()
+    {
+        SceneManager.LoadScene("StagePPSv2");
     }
 
     public void OnValueChanged(float scale)
