@@ -11,8 +11,9 @@
         // #pragma multi_compile __ GRAYSCALE
         #pragma multi_compile __ BLOOM
         #pragma multi_compile __ DOF
-        #pragma multi_compile __ CHROMATIC_ABERRATION
-        #pragma multi_compile BLOOM_LQ BLOOM_HQ
+        // #pragma multi_compile __ CHROMATIC_ABERRATION
+        // #pragma multi_compile BLOOM_LQ BLOOM_HQ
+        #pragma multi_compile __ BLOOM_HQ
         // #pragma multi_compile __ VIGNETTE
         // #pragma shader_feature GAUSSIAN_BLUR
             
@@ -119,8 +120,6 @@
 
             fixed4 frag (v2f i) : SV_Target
             {
-                // 色抽出にソフトニーを適用
-
                 half4 col = 1;
                 col = tex2D(_MainTex, i.uv);
                 
@@ -146,10 +145,6 @@
                 col.rgb = max(col.rgb - _FilterParams.x, 0);
 
                 //  col *= contribution;
-                #if UNITY_COLORSPACE_GAMMA
-                col.rgb = LinearToGammaSpace(col.rgb);
-                #endif
-
                 return col;
             }
 
@@ -222,20 +217,20 @@
             fixed4 frag(v2f i) : SV_Target {
                 fixed4 finalColor = 0;
                 #ifdef BLOOM
-                    half4 bloom =tex2D(_BloomTex1, i.uv);
-                    #ifdef BLOOM_LQ
-                    bloom.rgb += tex2D(_BloomTex2, i.uv).rgb;
-                    bloom.rgb += tex2D(_BloomTex3, i.uv).rgb;
-                    bloom.rgb /=3;
-                    #endif
-                    #ifdef BLOOM_HQ
+                    half4 bloom = tex2D(_BloomTex1, i.uv);
+                    // #ifdef BLOOM_LQ
+                    // bloom.rgb += tex2D(_BloomTex2, i.uv).rgb;
+                    // bloom.rgb += tex2D(_BloomTex3, i.uv).rgb;
+                    // bloom.rgb /=3;
+                    // #endif
+                    // #ifdef BLOOM_HQ
                     bloom.rgb += tex2D(_BloomTex2, i.uv).rgb;
                     bloom.rgb += tex2D(_BloomTex3, i.uv).rgb;
                     bloom.rgb += tex2D(_BloomTex4, i.uv).rgb;
                     bloom.rgb += tex2D(_BloomTex5, i.uv).rgb;
                     bloom.rgb += tex2D(_BloomTex6, i.uv).rgb;
                     bloom.rgb /=6;
-                    #endif
+                    // #endif
                     bloom.rgb *= _Intensity;
                     finalColor += bloom;
                 #endif
