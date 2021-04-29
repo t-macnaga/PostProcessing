@@ -5,6 +5,17 @@ namespace PostProcess
     [CreateAssetMenu()]
     public class Bloom : PostProcessEffect
     {
+        static readonly int FilterParamId = Shader.PropertyToID("_FilterParams");
+        static readonly int IntensityId = Shader.PropertyToID("_Intensity");
+        static readonly int SourceTexId = Shader.PropertyToID("_SourceTex");
+        static readonly int MainTexId = Shader.PropertyToID("_MainTex");
+        static readonly int BloomTex1Id = Shader.PropertyToID("_BloomTex1");
+        static readonly int BloomTex2Id = Shader.PropertyToID("_BloomTex2");
+        static readonly int BloomTex3Id = Shader.PropertyToID("_BloomTex3");
+        static readonly int BloomTex4Id = Shader.PropertyToID("_BloomTex4");
+        static readonly int BloomTex5Id = Shader.PropertyToID("_BloomTex5");
+        static readonly int BloomTex6Id = Shader.PropertyToID("_BloomTex6");
+
         // [SerializeField, Range(1, 6)] public int _iteration = 1;
         [SerializeField, Range(0.0f, 1.0f)] float _threshold = 0.0f;
         [SerializeField, Range(0.0f, 1.0f)] float _softThreshold = 0.0f;
@@ -32,9 +43,9 @@ namespace PostProcess
             filterParams.y = _threshold - knee;
             filterParams.z = knee * 2.0f;
             filterParams.w = 0.25f / (knee + 0.00001f);
-            context.UberMaterial.SetVector("_FilterParams", filterParams);
-            context.UberMaterial.SetFloat("_Intensity", _intensity);
-            context.UberMaterial.SetTexture("_SourceTex", context.Source);
+            context.UberMaterial.SetVector(FilterParamId, filterParams);
+            context.UberMaterial.SetFloat(IntensityId, _intensity);
+            context.UberMaterial.SetTexture(SourceTexId, context.Source);
 
             var width = sourceDesc.width;
             var height = sourceDesc.height;
@@ -53,23 +64,23 @@ namespace PostProcess
                 currentDesc = descs[i] = new RenderTextureDescriptor(width, height);
                 pathIndex = i == 0 ? Constants.BloomExtractPass : Constants.BloomBlurPass;
                 textures[i] = RenderTexture.GetTemporary(currentDesc);
-                context.CommandBuffer.SetGlobalTexture("_MainTex", currentSource);
+                context.CommandBuffer.SetGlobalTexture(MainTexId, currentSource);
                 context.CommandBuffer.Blit(currentSource, textures[i], context.UberMaterial, pathIndex);
                 currentSource = textures[i];
                 width /= 2;
                 height /= 2;
             }
 
-            context.UberMaterial.SetTexture("_BloomTex1", textures[0]);
-            context.UberMaterial.SetTexture("_BloomTex2", textures[1]);
-            context.UberMaterial.SetTexture("_BloomTex3", textures[2]);
+            context.UberMaterial.SetTexture(BloomTex1Id, textures[0]);
+            context.UberMaterial.SetTexture(BloomTex2Id, textures[1]);
+            context.UberMaterial.SetTexture(BloomTex3Id, textures[2]);
             if (bloomHQ)
             {
                 context.UberMaterial.EnableKeyword("BLOOM_HQ");
                 context.UberMaterial.DisableKeyword("BLOOM_LQ");
-                context.UberMaterial.SetTexture("_BloomTex4", textures[3]);
-                context.UberMaterial.SetTexture("_BloomTex5", textures[4]);
-                context.UberMaterial.SetTexture("_BloomTex6", textures[5]);
+                context.UberMaterial.SetTexture(BloomTex4Id, textures[3]);
+                context.UberMaterial.SetTexture(BloomTex5Id, textures[4]);
+                context.UberMaterial.SetTexture(BloomTex6Id, textures[5]);
             }
             else
             {
