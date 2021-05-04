@@ -5,12 +5,12 @@ EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Scenes:
-  - enabled: 0
-    path: Assets/StagePPSv2.unity
-    guid: b1ed765242d0bbc4facce0829e68310c
-  - enabled: 0
+  - enabled: 1
     path: Assets/Stage.unity
     guid: 4b4444cf84f908b48b54f3b18478f963
+  - enabled: 1
+    path: Assets/StagePPSv2.unity
+    guid: b1ed765242d0bbc4facce0829e68310c
   - enabled: 1
     path: Assets/Scenes/Main.unity
     guid: eac708282bd3644f08ee300328f7e486
@@ -18,6 +18,6 @@ EditorBuildSettings:
     path: Assets/SampleScene.unity
     guid: fe5cf86248363784798013a31a2e7615
   - enabled: 0
-    path: Assets/BehaviourUpdateManager/SampleScene.unity
-    guid: 5fb1dafbaa5b300478281f0f6f73e566
+    path: 
+    guid: 00000000000000000000000000000000
   m_configObjects: {}

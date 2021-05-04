@@ -13,10 +13,10 @@ MonoBehaviour:
   m_Name: Bloom
   m_EditorClassIdentifier: 
   isEnabled: 1
-  _iteration: 6
   _threshold: 0.352
   _softThreshold: 0.381
   _intensity: 1.23
+  bloomHQ: 1
   _debug: 0
 --- !u!114 &-6075895494862549853
 MonoBehaviour:
@@ -30,23 +30,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a6fdc12f4932f4942bf0d0e941910fb3, type: 3}
   m_Name: DepthOfField
   m_EditorClassIdentifier: 
-  isEnabled: 0
-  depth: 0.02
+  isEnabled: 1
+  depth: 2.32
   radious: 0.21
---- !u!114 &-1885481035640737011
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 13e98ecd1f70d1e4582f254d7cc4faff, type: 3}
-  m_Name: ChromaticAberration
-  m_EditorClassIdentifier: 
-  isEnabled: 0
-  size: 0.0176
+  fakeDofWithBloom: 1
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -62,4 +49,4 @@ MonoBehaviour:
   components:
   - {fileID: -9096135625419837008}
   - {fileID: -6075895494862549853}
-  - {fileID: -1885481035640737011}
+  - {fileID: 0}

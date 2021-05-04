@@ -10,11 +10,9 @@
         #pragma fragment frag
         // #pragma multi_compile __ GRAYSCALE
         #pragma multi_compile __ BLOOM
-        #pragma multi_compile __ DOF
-        // #pragma multi_compile __ CHROMATIC_ABERRATION
-        // #pragma multi_compile BLOOM_LQ BLOOM_HQ
-        #pragma multi_compile __ BLOOM_HQ
-        // #pragma multi_compile __ VIGNETTE
+        #pragma multi_compile __ DOF FAKE_DOF_WITH_BLOOM
+        #pragma multi_compile __ CHROMATIC_ABERRATION
+        #pragma multi_compile __ VIGNETTE
         // #pragma shader_feature GAUSSIAN_BLUR
             
         #include "UnityCG.cginc"
@@ -22,8 +20,6 @@
         sampler2D _MainTex;
         float4 _MainTex_ST;
         float4 _MainTex_TexelSize;
-        //TODO: 未使用
-        sampler2D _SourceTex;
         // Chromatic Aberration
         half _ChromaticAberrationSize;
 
@@ -49,6 +45,7 @@
 
         // _Thresholdを削除して_FilterParamsを追加
         half4 _FilterParams;
+        float _Threshold;
         float _Intensity;
         uniform half      _Radius;
 
@@ -76,14 +73,13 @@
 
         half getBrightness(half3 color){
             return Luminance(color);
-            // return max(color.r, max(color.g, color.b));
         }
 
         half4 Blur( half2 dir,v2f i)
         {
             half4 color = tex2D(_MainTex, i.uv);
             float weights[5] = { 0.22702702702, 0.19459459459, 0.12162162162, 0.05405405405, 0.01621621621 };
-            float2 offset = dir * _MainTex_TexelSize.xy * 3;//_Radius;
+            float2 offset = dir * _MainTex_TexelSize.xy * _Radius;
             color.rgb *= weights[0];
             color.rgb += tex2D(_MainTex, i.uv + offset      ).rgb * weights[1];
             color.rgb += tex2D(_MainTex, i.uv - offset      ).rgb * weights[1];
@@ -127,12 +123,6 @@
                 col.rgb = GammaToLinearSpace(col.rgb);
                 #endif
 
-                // Depthで色変えたりとか。。
-                //     float depth = tex2D(_CameraDepthTexture, i.uv).r;
-                //     depth = 1.0 / (_ZBufferParams.x * depth + _ZBufferParams.y) * _Depth;
-                //     float blur = saturate(depth * _ProjectionParams.z);
-                // col *= blur;
-
                 // half brightness = getBrightness(col.rgb);
                 // half soft = brightness - _FilterParams.y;
                 // soft = clamp(soft, 0, _FilterParams.z);
@@ -142,9 +132,8 @@
                 
                 col.a = getBrightness(col.rgb);
                 // 白飛びを防ぐ
-                col.rgb = max(col.rgb - _FilterParams.x, 0);
-
-                //  col *= contribution;
+                col.rgb = max(col.rgb - _Threshold, 0);
+                // col.a += max(col.a - _Threshold, 0);
                 return col;
             }
 
@@ -187,9 +176,24 @@
             //------------------------------------------------------------------------
             fixed4 frag(v2f i) : SV_Target {
                 half4 color = 1;//tex2D(_MainTex, i.uv);
-                color.rgb = sampleBox(i.uv , 1);
-                color.rgb += sampleBox(i.uv , 2);
-                color.rgb *= 0.5;
+                color.rgb = sampleBox(i.uv , _Radius);
+                #if BLOOM
+                    #if UNITY_COLORSPACE_GAMMA
+                    {
+                        color.rgb = GammaToLinearSpace(color.rgb);
+                        color.rgb += tex2D(_FinalBlurTex,i.uv);
+                        color.rgb = LinearToGammaSpace(color.rgb);
+                    }
+                    #else
+                    {
+                        color.rgb += tex2D(_FinalBlurTex,i.uv);
+                    }
+                    #endif
+                #endif
+                // color.rgb = sampleBox(i.uv , 1);
+                // color.rgb = sampleBox(i.uv , 2);
+                // color.rgb += sampleBox(i.uv , 2);
+                // color.rgb *= 0.5;
 
                 // // Gaussian Blur
                 // half4 color = tex2D(_MainTex, i.uv);
@@ -218,19 +222,12 @@
                 fixed4 finalColor = 0;
                 #ifdef BLOOM
                     half4 bloom = tex2D(_BloomTex1, i.uv);
-                    // #ifdef BLOOM_LQ
-                    // bloom.rgb += tex2D(_BloomTex2, i.uv).rgb;
-                    // bloom.rgb += tex2D(_BloomTex3, i.uv).rgb;
-                    // bloom.rgb /=3;
-                    // #endif
-                    // #ifdef BLOOM_HQ
                     bloom.rgb += tex2D(_BloomTex2, i.uv).rgb;
                     bloom.rgb += tex2D(_BloomTex3, i.uv).rgb;
                     bloom.rgb += tex2D(_BloomTex4, i.uv).rgb;
                     bloom.rgb += tex2D(_BloomTex5, i.uv).rgb;
                     bloom.rgb += tex2D(_BloomTex6, i.uv).rgb;
                     bloom.rgb /=6;
-                    // #endif
                     bloom.rgb *= _Intensity;
                     finalColor += bloom;
                 #endif
@@ -239,23 +236,72 @@
             ENDCG
         }
 
-        // 4: Final
+        // 3: Final
         Pass {
 
             CGPROGRAM
             fixed4 frag(v2f i) : SV_TARGET{
                 fixed4 color = tex2D(_MainTex,i.uv);
 
-                #ifdef DOF
+                half4 bloom = half4(0,0,0,0);
+                float depth = 0;//bloom.a;
+                #if BLOOM
                 {
-                    float depth = tex2D(_CameraDepthTexture, i.uv).r;
-                    depth = 1.0 / (_ZBufferParams.x * depth + _ZBufferParams.y) * _Depth;
-                    float blur = saturate(depth * _ProjectionParams.z);
-                    color.rgb = lerp(color.rgb, tex2D(_BlurTex, i.uv).rgb, blur);
+                    bloom = tex2D(_FinalBlurTex,i.uv);
+                    depth = bloom.a;
+                    // Combine bloomをここでおこなうとモアレが発生しにくい。
+                    // // depth = getBrightness(color.rgb);// color.r;
+                    // bloom.rgb += tex2D(_BloomTex2, i.uv).rgb;
+                    // bloom.rgb += tex2D(_BloomTex3, i.uv).rgb;
+                    // bloom.rgb += tex2D(_BloomTex4, i.uv).rgb;
+                    // bloom.rgb += tex2D(_BloomTex5, i.uv).rgb;
+                    // bloom.rgb += tex2D(_BloomTex6, i.uv).rgb;
+                    // bloom.rgb /= 6;
+                    // bloom.rgb *= _Intensity;
+                    #if UNITY_COLORSPACE_GAMMA
+                    {
+                        color.rgb = GammaToLinearSpace(color.rgb);
+                        color.rgb += bloom.rgb;
+                        color.rgb = LinearToGammaSpace(color.rgb);
+                    }
+                    #else
+                    {
+                        color.rgb += bloom.rgb;
+                    }
+                    #endif
+                }
+                #else
+                {
+                    depth = getBrightness(color.rgb);
+                }
+                #endif
+
+                #if DOF || FAKE_DOF_WITH_BLOOM
+                {
+                    #if FAKE_DOF_WITH_BLOOM
+                    {
+                        color.rgb = depth > _Depth ? color.rgb : tex2D(_BlurTex, i.uv).rgb;
+                        // color.rgb = depth > _Depth ? color.rgb : (tex2D(_BlurTex, i.uv).rgb + bloom.rgb);
+                        // color.rgb = depth > _Depth ? color.rgb : (sampleBox(i.uv , 1).rgb+sampleBox(i.uv , 2).rgb)/2;
+                        // color.rgb = depth > _Depth ? color.rgb : (sampleBox(i.uv , 2).rgb*2+color.rgb*2)/4;
+                        // color.rgb = depth > _Depth ? color.rgb : (sampleBox(i.uv , _Radius).rgb+bloom.rgb);
+                        // color.rgb = depth > _Depth ? color.rgb : 
+                        // ((Blur(half2(1,0),i).rgb+Blur(half2(0,1),i).rgb)/2+tex2D(_FinalBlurTex,i.uv).rgb);
+                        // color.rgb = depth > _Depth ? color.rgb : (tex2D(_BlurTex, i.uv).rgb+tex2D(_FinalBlurTex,i.uv).rgb);
+                        // color.rgb = lerp(color.rgb, tex2D(_BlurTex, i.uv).rgb, depth);
+                    }
+                    #else
+                    {
+                        depth = tex2D(_CameraDepthTexture, i.uv).r;
+                        depth = 1.0 / (_ZBufferParams.x * depth + _ZBufferParams.y) * _Depth;
+                        float blur = saturate(depth * _ProjectionParams.z);
+                        color.rgb = lerp(color.rgb, tex2D(_BlurTex, i.uv).rgb, blur);
+                    }
+                    #endif
                 }
                 #endif
                 
-                #ifdef CHROMATIC_ABERRATION // inspired by: https://light11.hatenadiary.com/entry/2018/06/20/000151
+                #if CHROMATIC_ABERRATION // inspired by: https://light11.hatenadiary.com/entry/2018/06/20/000151
                 {
                     half2 uvBase = i.uv - 0.5h;
                     // R値を拡大したものに置き換える
@@ -267,26 +313,9 @@
                 }
                 #endif
 
-                #if UNITY_COLORSPACE_GAMMA
-                {
-                    color.rgb = GammaToLinearSpace(color.rgb);
-                }
-                #endif
-
-                #ifdef BLOOM
-                {
-                    color += tex2D(_FinalBlurTex,i.uv);
-                }
-                #endif
-                
-                #if UNITY_COLORSPACE_GAMMA
-                {
-                    color.rgb = LinearToGammaSpace(color.rgb);
-                }
-                #endif
 
                 // inspired by : https://www.shadertoy.com/view/lsKSWR
-                #ifdef VIGNETTE
+                #if VIGNETTE
                 {
                     half2 uv = i.uv;
                     uv *=  1.0 - uv.yx;   //vec2(1.0)- uv.yx; -> 1.-u.yx; Thanks FabriceNeyret !
@@ -296,7 +325,7 @@
                 }
                 #endif
 
-                #ifdef GRAYSCALE
+                #if GRAYSCALE
                 {
                     color = Luminance(color);
                 }

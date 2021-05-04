@@ -30,13 +30,6 @@ namespace PostProcess
             RebuildRT();
         }
 #endif
-
-        void Awake()
-        {
-            camera = GetComponent<Camera>();
-            camera.depthTextureMode |= DepthTextureMode.Depth;
-        }
-
         void Update()
         {
             if (isRenderManual)
@@ -53,10 +46,9 @@ namespace PostProcess
 
         void OnEnable()
         {
+            camera = GetComponent<Camera>();
             cmd = new CommandBuffer();
-            Context = new PostProcessContext(cmd);
-            Context.Profile = profile;
-            Context.Camera = camera;
+            Context = new PostProcessContext(cmd, profile, camera);
             camera.AddCommandBuffer(CameraEvent.BeforeImageEffects, cmd);
             Context.GetTemporaryRT(Width, Height);
         }

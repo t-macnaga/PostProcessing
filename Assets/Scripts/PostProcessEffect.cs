@@ -8,5 +8,6 @@ namespace PostProcess
         public virtual bool IsEnabled { get => isEnabled; set => isEnabled = value; }
         public abstract void Render(PostProcessContext context);
         public virtual void FrameCleanup() { }
+        public virtual bool HasDepthTextureMode() => false;
     }
 }

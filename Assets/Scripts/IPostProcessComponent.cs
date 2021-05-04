@@ -5,5 +5,6 @@
         bool IsEnabled { get; set; }
         void Render(PostProcessContext context);
         void FrameCleanup();
+        bool HasDepthTextureMode();
     }
 }

@@ -16,16 +16,51 @@ namespace PostProcess
         public RenderTexture Source { get; set; }
         public RenderTexture Dest { get; set; }
 
-        public PostProcessContext(CommandBuffer commandBuffer)
+        public PostProcessContext(CommandBuffer commandBuffer, PostProcessProfile profile, Camera camera)
         {
             CommandBuffer = commandBuffer;
+            CommandBuffer.name = "PostEffect";
             UberMaterial = new Material(Shader.Find("Hidden/PostEffect/Uber"));
             UberMaterial.hideFlags = HideFlags.HideAndDontSave;
+            Profile = profile;
+            Camera = camera;
+            EnableDepthTextureModeOrNot();
         }
 
         public void Cleanup()
         {
             Object.DestroyImmediate(UberMaterial);
+        }
+
+        void EnableDepthTextureModeOrNot()
+        {
+            var hasDepthTextureMode = false;
+            foreach (var effect in Profile.components)
+            {
+                if (effect.HasDepthTextureMode())
+                {
+                    hasDepthTextureMode = true;
+                    break;
+                }
+            }
+            if (hasDepthTextureMode)
+            {
+                EnableDepthTextureMode();
+            }
+            else
+            {
+                DisableDepthTextureMode();
+            }
+        }
+
+        public void EnableDepthTextureMode()
+        {
+            Camera.depthTextureMode |= DepthTextureMode.Depth;
+        }
+
+        public void DisableDepthTextureMode()
+        {
+            Camera.depthTextureMode &= ~DepthTextureMode.Depth;
         }
 
         public void OnPostRender()
@@ -38,7 +73,7 @@ namespace PostProcess
             Profile.Render(this);
 
             UberMaterial.SetTexture("_MainTex", sourceRT);
-            UberMaterial.SetTexture("_FinalBlurTex", Dest);
+            // UberMaterial.SetTexture("_FinalBlurTex", Dest);
 
             // Blit final pass
             CommandBuffer.Blit(sourceRT, destRT, UberMaterial, Constants.BlitFinalPass);
@@ -56,8 +91,9 @@ namespace PostProcess
         {
             sourceRT = RenderTexture.GetTemporary(width, height, 16);
             destRT = RenderTexture.GetTemporary(width, height, 16);
-            tempRT = RenderTexture.GetTemporary(width / 2, height / 2, 16);
+            // tempRT = RenderTexture.GetTemporary(width / 2, height / 2, 16);
             var ratio = (width > height) ? (float)width / height : (float)height / width;
+            tempRT = RenderTexture.GetTemporary(512, (int)(512 / ratio), 16);
             // halfSourceRT = RenderTexture.GetTemporary(width / 2, height / 2, 16);
             halfSourceRT = RenderTexture.GetTemporary(512, (int)(512 / ratio), 16);
         }

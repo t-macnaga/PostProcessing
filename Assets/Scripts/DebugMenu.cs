@@ -9,10 +9,13 @@ public class DebugMenu : MonoBehaviour
 {
     public Text fpsText;
     public GameObject container;
+    public Slider bloomIntensitySlider;
+    public Slider dofDepthSlider;
     // 変数
     int frameCount;
     float prevTime;
     float fps;
+    PostProcessCamera PostProcessCamera => GameObject.FindObjectOfType<PostProcessCamera>();
 
     void Start()
     {
@@ -40,11 +43,17 @@ public class DebugMenu : MonoBehaviour
     public void ToggleDebugMenu(bool on)
     {
         container.SetActive(on);
+        bloomIntensitySlider.value = PostProcessCamera.profile.GetEffect<Bloom>().Intensity;
+        dofDepthSlider.value = PostProcessCamera.profile.GetEffect<DepthOfField>().Depth;
     }
 
     public void TogglePostProcess(bool on)
     {
-        GameObject.FindObjectOfType<PostProcessCamera>().enabled = on;
+        PostProcessCamera.enabled = on;
+        if (!on)
+        {
+            PostProcessCamera.Context.Camera.enabled = true;
+        }
     }
 
     public void ToggleAllowHDR(bool on)
@@ -80,15 +89,13 @@ public class DebugMenu : MonoBehaviour
 
     public void OnValueChanged(float scale)
     {
-        var postProcess = GameObject.FindObjectOfType<PostProcessCamera>();
-        postProcess.renderScale = scale;
-        postProcess.RebuildRT();
+        PostProcessCamera.renderScale = scale;
+        PostProcessCamera.RebuildRT();
     }
 
     public void ToggleBloom(bool on)
     {
-        var postProcess = GameObject.FindObjectOfType<PostProcessCamera>();
-        postProcess.profile.GetEffect<Bloom>().IsEnabled = on;
+        PostProcessCamera.profile.GetEffect<Bloom>().IsEnabled = on;
     }
 
     public void OnValueChangeBloomIteration(float step)
@@ -98,22 +105,23 @@ public class DebugMenu : MonoBehaviour
         //TODO:
     }
 
+    public void OnValueChangeBloomIntensity(float value)
+    {
+        PostProcessCamera.profile.GetEffect<Bloom>().Intensity = value;
+    }
+
+    public void OnValueChangeDofDepth(float value)
+    {
+        PostProcessCamera.profile.GetEffect<DepthOfField>().Depth = value;
+    }
+
     public void ToggleDof(bool on)
     {
-        var postProcess = GameObject.FindObjectOfType<PostProcessCamera>();
-        postProcess.profile.GetEffect<DepthOfField>().IsEnabled = on;
+        PostProcessCamera.profile.GetEffect<DepthOfField>().IsEnabled = on;
     }
 
     public void ToggleGray(bool on)
     {
-        var postProcess = GameObject.FindObjectOfType<PostProcessCamera>();
-        postProcess.profile.GetEffect<GrayScale>().IsEnabled = on;
+        PostProcessCamera.profile.GetEffect<GrayScale>().IsEnabled = on;
     }
-
-
-    // 表示処理
-    // private void OnGUI()
-    // {
-    //     GUILayout.Label(fps.ToString());
-    // }
 }
