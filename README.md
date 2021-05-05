@@ -11,3 +11,10 @@ My Quicker Post Processing.
 * Bloom
 * DOF (only 1 draw call using depth texture)
 * FakeDOF( only 1 draw call and without depth texture)
+
+# License
+MIT
+
+# UnityChan
+CandyRockStar
+© UTJ/UCL
