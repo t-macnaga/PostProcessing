@@ -13,11 +13,10 @@ MonoBehaviour:
   m_Name: Bloom
   m_EditorClassIdentifier: 
   isEnabled: 1
-  _threshold: 0.352
-  _softThreshold: 0.381
-  _intensity: 1.23
-  bloomHQ: 1
-  _debug: 0
+  _iteration: 5
+  _threshold: 0.9
+  _intensity: 25.9
+  _downSampleScale: 2
 --- !u!114 &-6075895494862549853
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -31,8 +30,8 @@ MonoBehaviour:
   m_Name: DepthOfField
   m_EditorClassIdentifier: 
   isEnabled: 1
-  depth: 2.32
-  radious: 0.21
+  depth: 0.394933
+  radious: 0.5
   fakeDofWithBloom: 1
 --- !u!114 &11400000
 MonoBehaviour:
@@ -44,9 +43,8 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 108e07c1162d2ef4ab631b6ecb0d9dc3, type: 3}
-  m_Name: New Post Process Profile 2
+  m_Name: MainProfile
   m_EditorClassIdentifier: 
   components:
   - {fileID: -9096135625419837008}
   - {fileID: -6075895494862549853}
-  - {fileID: 0}

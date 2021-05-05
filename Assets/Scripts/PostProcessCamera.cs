@@ -46,6 +46,10 @@ namespace PostProcess
 
         void OnEnable()
         {
+#if UNITY_EDITOR
+            if (!Application.isPlaying)
+                UnityEditor.EditorApplication.update += Update;
+#endif
             camera = GetComponent<Camera>();
             cmd = new CommandBuffer();
             Context = new PostProcessContext(cmd, profile, camera);
@@ -55,6 +59,10 @@ namespace PostProcess
 
         void OnDisable()
         {
+#if UNITY_EDITOR
+            if (!Application.isPlaying)
+                UnityEditor.EditorApplication.update -= Update;
+#endif
             Context.Cleanup();
             camera.RemoveCommandBuffer(CameraEvent.BeforeImageEffects, cmd);
             camera.targetTexture = null;

@@ -219,7 +219,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b207da477178f7f4bb1426cd64628e5e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  profile: {fileID: 11400000, guid: 5f9d2c7bd1eb5064989fad57d5df7e7d, type: 2}
+  profile: {fileID: 11400000, guid: 75da8a5987f9cf34b80e6256eb35b5d8, type: 2}
   renderScale: 1
   downSampler: 1
   onPostRender:

@@ -13,11 +13,10 @@ MonoBehaviour:
   m_Name: Bloom
   m_EditorClassIdentifier: 
   isEnabled: 1
-  _threshold: 0.914
-  _softThreshold: 0.612
-  _intensity: 25.2
-  bloomHQ: 1
-  _debug: 0
+  _iteration: 5
+  _threshold: 0.9
+  _intensity: 26.1
+  _downSampleScale: 2
 --- !u!114 &-6075895494862549853
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -31,7 +30,7 @@ MonoBehaviour:
   m_Name: DepthOfField
   m_EditorClassIdentifier: 
   isEnabled: 1
-  depth: 0.32
+  depth: 0.394933
   radious: 0.5
   fakeDofWithBloom: 1
 --- !u!114 &11400000
