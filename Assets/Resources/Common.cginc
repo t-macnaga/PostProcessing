@@ -6,7 +6,7 @@
 sampler2D _MainTex;
 float4 _MainTex_ST;
 float4 _MainTex_TexelSize;
-uniform half      _Radius;
+uniform half _Radius;
 
 struct appdata
 {
@@ -20,18 +20,14 @@ struct v2f
     float4 vertex : SV_POSITION;
 };
 
-half3 sampleMain(float2 uv){
+half3 SampleMain(float2 uv){
     return tex2D(_MainTex, uv).rgb;
 }
 
-half3 sampleBox (float2 uv, float delta) {
+half3 SampleBox (float2 uv, float delta) {
     float4 offset = _MainTex_TexelSize.xyxy * float2(-delta, delta).xxyy;
-    half3 sum = sampleMain(uv + offset.xy) + sampleMain(uv + offset.zy) + sampleMain(uv + offset.xw) + sampleMain(uv + offset.zw);
+    half3 sum = SampleMain(uv + offset.xy) + SampleMain(uv + offset.zy) + SampleMain(uv + offset.xw) + SampleMain(uv + offset.zw);
     return sum * 0.25;
-}
-
-half getBrightness(half3 color){
-    return Luminance(color);
 }
 
 half4 Blur( half2 dir,v2f i)
@@ -51,7 +47,7 @@ half4 Blur( half2 dir,v2f i)
     return color;
 }
 
-v2f vert (appdata v)
+v2f Vert (appdata v)
 {
     v2f o;
     o.vertex = UnityObjectToClipPos(v.vertex);

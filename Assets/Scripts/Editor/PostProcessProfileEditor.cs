@@ -8,7 +8,7 @@ namespace PostProcess
 {
     public class EffectEditor
     {
-        bool foldout;
+        bool foldout = true;
         PostProcessProfileEditor profileEditor;
         Editor editor;
         public string Name => editor.target.name;

@@ -7,7 +7,7 @@ namespace PostProcess
     {
         [SerializeField] float depth;
         [SerializeField] float radious;
-        [SerializeField] bool fakeDofWithBloom;
+        [SerializeField] bool useFakeDof;
 
         int _MainTex;
         int _BlurTex;
@@ -24,11 +24,11 @@ namespace PostProcess
         {
             get
             {
-                if (fakeDofWithBloom) return false;
+                if (useFakeDof) return false;
                 return true;
             }
         }
-        string FakeDofShaderKeyword = "FAKE_DOF_WITH_BLOOM";
+        string FakeDofShaderKeyword = "FAKE_DOF";
         string DofShaderKeyword = "DOF";
 
         void OnEnable()
@@ -61,7 +61,7 @@ namespace PostProcess
                 enabledDepthTextureMode = true;
                 context.EnableDepthTextureMode();
             }
-            if (fakeDofWithBloom)
+            if (useFakeDof)
             {
                 context.UberMaterial.EnableKeyword(FakeDofShaderKeyword);
                 context.UberMaterial.DisableKeyword(DofShaderKeyword);
@@ -82,6 +82,6 @@ namespace PostProcess
             cmd.SetGlobalTexture(_BlurTex, rt1Id);
         }
 
-        public override bool HasDepthTextureMode() => IsEnabled && !fakeDofWithBloom;
+        public override bool HasDepthTextureMode() => IsEnabled && !useFakeDof;
     }
 }

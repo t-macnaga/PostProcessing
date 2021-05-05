@@ -6,10 +6,10 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/Stage.unity
+    path: Assets/Scenes/Stage.unity
     guid: 4b4444cf84f908b48b54f3b18478f963
   - enabled: 1
-    path: Assets/StagePPSv2.unity
+    path: Assets/Scenes/StagePPSv2.unity
     guid: b1ed765242d0bbc4facce0829e68310c
   - enabled: 1
     path: Assets/Scenes/Main.unity

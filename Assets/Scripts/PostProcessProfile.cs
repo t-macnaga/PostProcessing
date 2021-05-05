@@ -7,12 +7,7 @@ namespace PostProcess
     public class PostProcessProfile : ScriptableObject
     {
         public List<PostProcessEffect> components;
-#if UNITY_EDITOR
-        void OnValidate()
-        {
-            UnityEditor.EditorApplication.QueuePlayerLoopUpdate();
-        }
-#endif
+
         public void Add(PostProcessEffect component)
         {
             components.Add(component);

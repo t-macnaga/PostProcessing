@@ -10,7 +10,6 @@ namespace PostProcess
     {
         public PostProcessProfile profile;
         public float renderScale = 1f;
-        public float downSampler = 1f;
         public UnityEvent onPostRender = new UnityEvent();
         public int targetResolutionWidth = 856;
         public int targetResolutionHeight = 480;
